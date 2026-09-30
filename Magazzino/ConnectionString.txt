@@ -1,9 +1,0 @@
-﻿//Attiva migrations
-Enable-Migrations -ContextTypeName ApplicationDbContext -MigrationsDirectory IdentityMigrations
-Enable-Migrations -ContextTypeName BrighettiModels -MigrationsDirectory BrighettiMigrations
-//Aggiungi migrations
-Add-Migration Init -ConfigurationTypeName Brighetti.IdentityMigrations.Configuration
-Add-Migration Init -ConfigurationTypeName Brighetti.BrighettiMigrations.Configuration
-//Aggiorna DB con migrations
-Update-Database -ConfigurationTypeName Brighetti.IdentityMigrations.Configuration
-Update-Database -ConfigurationTypeName Brighetti.BrighettiMigrations.Configuration

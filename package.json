@@ -1,0 +1,51 @@
+{
+  "name": "essentia-mes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EssentiaMES - gestione produzione, magazzino e macchine (Next.js + SQL Server)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:init": "node scripts/db-init.mjs",
+    "db:check": "node scripts/db-check.mjs",
+    "user:create": "node scripts/create-user.mjs",
+    "e2e": "node scripts/e2e-smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "@fontsource/poppins": "^5.3.0",
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "bootstrap": "^5.3.8",
+    "chart.js": "^4.5.1",
+    "exceljs": "^4.4.0",
+    "jose": "^6.2.12",
+    "mssql": "^12.7.2",
+    "next": "^16.3.7",
+    "nodemailer": "^10.0.13",
+    "react": "^19.3.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "sweetalert2": "^11.26.25"
+  },
+  "devDependencies": {
+    "@types/mssql": "^12.3.0",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.3.7",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.2"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}

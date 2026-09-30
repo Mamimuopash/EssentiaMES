@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+data
+.env*
+!.env.example
+*.log
+tests
+_legacy_assets

@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<parameters>
-  <setParameter name="IIS Web Application Name" value="Default Web Site/Brighetti_deploy" />
-  <setParameter name="DefaultConnection-Web.config Connection String" value="Data Source=(LocalDb)\MSSQLLocalDB;Initial Catalog=Brighetti;Integrated Security=True" />
-  <setParameter name="BrighettiModels-Web.config Connection String" value="Data Source=(LocalDb)\MSSQLLocalDB;Initial Catalog=Brighetti;Integrated Security=True" />
-</parameters>

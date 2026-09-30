@@ -1,0 +1,57 @@
+# ---------------------------------------------------------------------------
+# EssentiaMES su un server ESTERNO all'azienda (VPS/cloud), con accesso al
+# SQL Server aziendale tramite Tailscale (VPN mesh, nessuna porta aperta sul
+# firewall dell'azienda). Vedi README, sezione "Deploy".
+#
+#   cp .env.example .env.production   # compilare DB_* e SESSION_SECRET
+#   TS_AUTHKEY=tskey-auth-... docker compose up -d --build
+#
+# Senza Tailscale (es. VPN site-to-site gia' presente o server in LAN):
+#   docker compose up -d --build app   e rimuovere "network_mode" dal servizio app.
+# ---------------------------------------------------------------------------
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    hostname: essentia-mes
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY:-}   # chiave di autenticazione Tailscale (obbligatoria per il deploy)
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "3000:3000"   # l'app e' esposta tramite il namespace di rete di questo container
+    restart: unless-stopped
+
+  app:
+    build: .
+    image: essentia-mes:latest
+    env_file:
+      - path: .env.production
+        required: false   # obbligatorio per il deploy; opzionale solo per il profilo "test"
+    network_mode: service:tailscale   # esce verso il DB aziendale attraverso Tailscale
+    depends_on:
+      - tailscale
+    volumes:
+      - essentia-data:/app/data       # documenti allegati (UPLOAD_DIR)
+    restart: unless-stopped
+
+  # Solo per test locali: SQL Server usa-e-getta.
+  #   docker compose --profile test up -d sqlserver
+  sqlserver:
+    profiles: ["test"]
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Essentia!Dev2026}
+      - TZ=Europe/Rome
+    ports:
+      - "1433:1433"
+
+volumes:
+  tailscale-state:
+  essentia-data:

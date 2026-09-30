@@ -1,0 +1,56 @@
+/* Stili aggiuntivi della versione Next.js (componenti React al posto di jQuery/DataTables). */
+body { background: #fff; }
+.body-content { padding-bottom: 120px; }
+.page-title { font-weight: 700; margin: 8px 0 16px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.toolbar .search { max-width: 320px; }
+.dt-wrap { overflow-x: auto; }
+.dt-wrap table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.dt-wrap table th .sort { opacity: .45; margin-left: 4px; font-size: .75em; }
+.dt-footer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; color: #5a6b7b; font-size: .9rem; }
+.dt-actions { white-space: nowrap; text-align: right; }
+.dt-actions .btn { color: #fff; margin-left: 2px; }
+.btn-grad { background: transparent linear-gradient(225deg, #8743FF 0%, #4136F1 100%) 0% 0% no-repeat padding-box; color: #fff !important; border: none; border-radius: 32px; box-shadow: 0px 15px 30px #1466CC29; }
+.btn-grad:hover { filter: brightness(1.08); }
+.btn-icon { background: transparent linear-gradient(225deg, #8743FF 0%, #4136F1 100%) 0% 0% no-repeat padding-box; color: #fff; border: none; border-radius: 10px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.btn-icon.danger { background: #dc3545; }
+.btn-icon:hover { filter: brightness(1.1); color: #fff; }
+.modal-backdrop-custom { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1060; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 32px 12px; }
+.modal-custom { background: #fff; border-radius: 16px; width: 100%; max-width: 820px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.modal-custom .modal-header { padding: 14px 18px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+.modal-custom .modal-body { padding: 18px; }
+.modal-custom .modal-footer { padding: 12px 18px; display: flex; justify-content: flex-end; gap: 8px; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.form-row label { font-size: .85rem; color: #5a6b7b; margin-bottom: 2px; display: block; }
+.stars i { color: #d0d0d0; }
+.stars i.on { color: #ffdd00; }
+.pin-popover { position: absolute; z-index: 20; transform: translate(-50%, calc(-100% - 36px)); background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.2); padding: 10px 14px; min-width: 220px; max-width: 320px; font-size: .85rem; }
+.pin-popover h6 { margin: 0 0 6px; font-weight: 700; }
+.planimetria { position: relative; width: 100%; max-width: 1334px; margin: 0 auto; }
+.planimetria img.mappa { width: 100%; height: auto; display: block; user-select: none; }
+.planimetria.edit img.mappa { cursor: crosshair; }
+.planimetria .pin { position: absolute; width: 50px; height: 50px; transform: translate(-40%, -40%); cursor: pointer; }
+.mode-buttons { position: fixed; right: 23px; bottom: 98px; display: flex; flex-direction: column; gap: 14px; z-index: 30; }
+.mode-buttons button { width: 40px; height: 40px; }
+.progress-eff { min-width: 140px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.card-soft { border: none !important; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px; border-radius: 16px !important; }
+.nota-card .card-footer { font-size: .8rem; color: #6c757d; }
+.empty-state { text-align: center; color: #6c757d; padding: 40px 0; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; z-index: 1059; background: #fff; border-radius: 24px 24px 0 0; box-shadow: 1px -4px 36px 18px #0000000d; display: flex; align-items: center; justify-content: space-around; padding: 0 8px; }
+.bottom-nav .nav-item-x { position: relative; display: flex; align-items: center; justify-content: center; flex: 1; height: 100%; }
+.bottom-nav .dropup-content { bottom: 64px; left: 50%; transform: translateX(-50%); }
+.bottom-nav .dropup-content a { white-space: nowrap; }
+.bottom-nav .dropup.open .dropup-content { display: block; box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px !important; }
+.bottom-nav button.nav-btn { background: none; border: none; padding: 0; }
+.gauge-wrap { display: flex; justify-content: center; padding: 8px 0; }
+.chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: #f1f3f5; font-size: .8rem; }
+@media (max-width: 576px) {
+  .mode-buttons { right: 12px; }
+  .TitleAccount { font-size: 28px !important; }
+}
+/* I nav-link hanno testo "a gradiente" (text-fill trasparente): i badge devono restare leggibili. */
+.nav-pills .badge { -webkit-text-fill-color: #fff !important; color: #fff !important; }
+/* Le notifiche "toast" (al posto di bootstrap-notify) non usano lo stile dei popup del vecchio CSS. */
+.swal2-popup.swal2-toast { width: auto !important; max-width: 420px !important; border-radius: 14px !important; }
+.swal2-toast .swal2-close { display: none !important; }
