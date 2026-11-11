@@ -459,22 +459,39 @@ I registri di ogni esecuzione degli script sono in `C:\ProgramData\EssentiaMES\l
 
 ## 13. Come sono stati provati gli script
 
-- Il workflow **Windows** di GitHub Actions (`.github/workflows/windows.yml`) gira a ogni
-  modifica di questa cartella, su un Windows Server 2022 pulito con
-  **SQL Server 2022 Express** installato con le impostazioni predefinite (TCP spento, solo
-  autenticazione Windows). In sequenza:
-  1. crea il pacchetto;
-  2. esegue `prepara-sql-server.ps1`;
-  3. crea un database "vecchio" con dati demo e ne fa il porting con `porting-database.ps1`;
-  4. installa l'app come servizio (Node.js installato da MSI) e lancia `verifica.ps1`;
-  5. esegue i **test end-to-end** sia diretti sia **tramite IIS in HTTPS**;
-  6. prova l'aggiornamento con `aggiorna-app.ps1` e la disinstallazione.
+**Già eseguito**
+- Tutti gli script passano il **parser ufficiale di PowerShell** e usano solo sintassi di
+  Windows PowerShell 5.1 (quella di Windows Server 2016): TLS 1.2 esplicito, solo caratteri
+  ASCII, nessuna sintassi di PowerShell 7.
+- `porting-database.ps1` è stato **eseguito per intero** (PowerShell in container) contro
+  SQL Server 2022, nei casi seguenti:
+  - porting completo con schema e migrazioni, e 34 tabelle uguali all'origine;
+  - rifiuto se il database esiste già;
+  - sovrascrittura con backup di sicurezza;
+  - messaggi chiari quando il server non risponde.
+- Le funzioni comuni sono state provate una per una:
+  - il file `essentia.env` scritto da PowerShell viene letto da Node in modo identico, anche
+    con `$ # % \n` e apici nelle password;
+  - l'XML del servizio WinSW è valido;
+  - il login SQL viene creato con una password "difficile";
+  - i batch `GO` di `schema.sql` vengono eseguiti correttamente.
+- L'app, montata nella stessa struttura di `C:\EssentiaMES` e avviata come la avvia il
+  servizio (`node --env-file=config\essentia.env server.js`), si collega con il login
+  `essentia_app` a permessi ridotti al database copiato. Supera **tutte le 122 verifiche
+  end-to-end**: non serve alcun permesso di modifica dello schema.
 
-  Windows Server 2016 usa la stessa Windows PowerShell 5.1: gli script ne rispettano i
-  limiti (TLS 1.2 esplicito, nessuna sintassi di PowerShell 7, solo caratteri ASCII).
-- Le query T-SQL di `sql\` e la sequenza backup → ripristino → utenti orfani → login con
-  permessi ridotti sono state provate anche su SQL Server 2022 (Linux). Su quella copia
-  l'app, avviata come la avvia il servizio, ha superato tutte le verifiche end-to-end.
-- **Non** è stato possibile provare un vero Windows Server 2016 né il porting tra due
-  computer diversi (copia via `\\server\C$`). Per questi casi gli script controllano
-  ogni passaggio e, se qualcosa non va, dicono cosa fare a mano.
+**Da eseguire su Windows** (registro di SQL Server, servizio Windows, IIS, firewall, MSI):
+il workflow **Windows** di GitHub Actions (`.github/workflows/windows.yml`) fa questa prova
+completa su un Windows Server 2022 pulito con SQL Server 2022 Express installato con le
+impostazioni predefinite (TCP spento, solo autenticazione Windows). In sequenza:
+1. crea il pacchetto;
+2. esegue `prepara-sql-server.ps1`;
+3. fa il porting di un database demo;
+4. installa il servizio con Node.js da MSI e lancia `verifica.ps1`;
+5. esegue i test end-to-end diretti e tramite IIS in HTTPS;
+6. prova aggiornamento e disinstallazione.
+
+Il workflow parte a ogni modifica di `deploy/windows` o a mano (*Actions → Windows → Run
+workflow*), ma serve che l'account GitHub possa usare i runner Windows (minuti di Actions
+disponibili). Alla prima installazione sul server ogni passaggio viene comunque
+controllato: in caso di problemi lo script si ferma e spiega cosa fare.

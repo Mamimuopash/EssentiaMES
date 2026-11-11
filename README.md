@@ -374,7 +374,8 @@ Server pulito con SQL Server 2022 Express:
 5. esegue `verifica.ps1` e questo stesso test end-to-end, sia diretto sia tramite IIS in HTTPS;
 6. prova aggiornamento e disinstallazione.
 
-Dettagli in [deploy/windows/README.md §13](deploy/windows/README.md#13-come-sono-stati-provati-gli-script).
+Serve che l'account GitHub possa usare i runner Windows (minuti di Actions). Cosa è già
+stato provato e cosa no: [deploy/windows/README.md §13](deploy/windows/README.md#13-come-sono-stati-provati-gli-script).
 
 ## 10. Funzionalità e corrispondenza con il vecchio software
 

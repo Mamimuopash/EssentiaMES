@@ -53,13 +53,20 @@ function Stop-Errore([string]$Testo) {
     throw [System.Exception]::new($Testo)
 }
 
+# Messaggio leggibile di un errore (senza il prefisso 'Exception calling "Open"...').
+function Get-MessaggioErrore($Err) {
+    if ($Err.Exception.InnerException) { return $Err.Exception.InnerException.Message }
+    return $Err.Exception.Message
+}
+
 function Write-ErroreFinale($Err) {
-    $msg = $Err.Exception.Message
-    if ($Err.Exception.InnerException) { $msg = $Err.Exception.InnerException.Message }
+    $msg = Get-MessaggioErrore $Err
     Write-Host ''
     Write-Host "[ERRORE] $msg" -ForegroundColor Red
-    if ($Err.InvocationInfo -and $Err.InvocationInfo.ScriptName) {
-        Write-Host ("         ({0}, riga {1})" -f (Split-Path $Err.InvocationInfo.ScriptName -Leaf), $Err.InvocationInfo.ScriptLineNumber) -ForegroundColor DarkGray
+    # Punto dello script in cui si e' verificato l'errore (saltando Stop-Errore).
+    $frame = @("$($Err.ScriptStackTrace)" -split "`n" | Where-Object { $_ -and $_ -notmatch '^at Stop-Errore' }) | Select-Object -First 1
+    if ($frame -match ',\s*(.+?):\s*(?:line|riga)\s*(\d+)') {
+        Write-Host ("         ({0}, riga {1})" -f (Split-Path $Matches[1] -Leaf), $Matches[2]) -ForegroundColor DarkGray
     }
 }
 

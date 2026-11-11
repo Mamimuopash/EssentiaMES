@@ -89,7 +89,11 @@ try {
     # ------------------------------------------------------------ origine
     Write-Passo "Origine: $ServerOrigine / $DatabaseOrigine"
     $cnOrigine = New-Connessione -Server $ServerOrigine -Database 'master' -Utente $UtenteOrigine -Password (ConvertFrom-Protetta $PasswordOrigine) -Timeout 30
-    $infoO = Invoke-SqlModello $cnOrigine 'info-istanza.sql' @{ db = $DatabaseOrigine } | Select-Object -First 1
+    try {
+        $infoO = Invoke-SqlModello $cnOrigine 'info-istanza.sql' @{ db = $DatabaseOrigine } | Select-Object -First 1
+    } catch {
+        Stop-Errore ("Connessione al vecchio SQL Server '{0}' non riuscita: {1}`n         Verificare nome\istanza o porta, che TCP/IP sia attivo e il firewall (prepara-sql-server.ps1 sul vecchio server), oppure usare -UtenteOrigine per un login SQL." -f $ServerOrigine, (Get-MessaggioErrore $_))
+    }
     $verO = Get-VersionePrincipale (Get-Campo $infoO 'Versione')
     Write-Ok ("SQL Server {0} ({1}) {2} su {3}" -f $NomiVersione[$verO], (Get-Campo $infoO 'Versione'), (Get-Campo $infoO 'Edizione'), (Get-Campo $infoO 'Macchina'))
     if ($null -eq (Get-Campo $infoO 'NomeDatabase')) { Stop-Errore "Il database '$DatabaseOrigine' non esiste su $ServerOrigine." }
@@ -101,7 +105,11 @@ try {
     Write-Passo "Destinazione: $ServerDestinazione / $DatabaseDestinazione"
     $pwdDest = ConvertFrom-Protetta $PasswordDestinazione
     $cnDest = New-Connessione -Server $ServerDestinazione -Database 'master' -Utente $UtenteDestinazione -Password $pwdDest -Timeout 30
-    $infoD = Invoke-SqlModello $cnDest 'info-istanza.sql' @{ db = $DatabaseDestinazione } | Select-Object -First 1
+    try {
+        $infoD = Invoke-SqlModello $cnDest 'info-istanza.sql' @{ db = $DatabaseDestinazione } | Select-Object -First 1
+    } catch {
+        Stop-Errore ("Connessione al nuovo SQL Server '{0}' non riuscita: {1}" -f $ServerDestinazione, (Get-MessaggioErrore $_))
+    }
     $verD = Get-VersionePrincipale (Get-Campo $infoD 'Versione')
     Write-Ok ("SQL Server {0} ({1}) {2} su {3}" -f $NomiVersione[$verD], (Get-Campo $infoD 'Versione'), (Get-Campo $infoD 'Edizione'), (Get-Campo $infoD 'Macchina'))
     if ([int](Get-Campo $infoD 'Sysadmin') -ne 1) { Stop-Errore 'Sulla destinazione serve un account sysadmin (per RESTORE).' }
@@ -176,8 +184,8 @@ try {
     Write-Passo "Ripristino come $DatabaseDestinazione"
     $file = @(Invoke-Sql -Connessione $cnDest -Sql "RESTORE FILELISTONLY FROM DISK = $(Format-LetteraleSql $fileDest)")
     if ($file.Count -eq 0) { Stop-Errore "Il file $fileDest non contiene un backup leggibile." }
-    $cartDati = (Get-Campo $infoD 'CartellaDati').TrimEnd('\')
-    $cartLog = (Get-Campo $infoD 'CartellaLog').TrimEnd('\')
+    $cartDati = (Get-Campo $infoD 'CartellaDati').TrimEnd('\', '/')
+    $cartLog = (Get-Campo $infoD 'CartellaLog').TrimEnd('\', '/')
     $sposta = @()
     $nDati = 0
     $nLog = 0
