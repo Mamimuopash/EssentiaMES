@@ -55,11 +55,15 @@ if ($cfg.Count -eq 0) {
 
 Write-Passo 'Rete verso SQL Server'
 if ($cfg['DB_SERVER']) {
-    if ($cfg['DB_PORT']) {
-        if (Test-PortaTcp $cfg['DB_SERVER'] ([int]$cfg['DB_PORT'])) { Write-Ok "$($cfg['DB_SERVER']):$($cfg['DB_PORT']) raggiungibile" }
-        else { Add-Problema "Porta $($cfg['DB_PORT']) di $($cfg['DB_SERVER']) non raggiungibile (TCP/IP disattivato in SQL Server, firewall, VPN?)" }
-    } elseif ($cfg['DB_INSTANCE']) {
-        Write-Info "Istanza con nome $($cfg['DB_INSTANCE']): serve il servizio SQL Server Browser (UDP 1434) sul server SQL."
+    $hostDb = $cfg['DB_SERVER']
+    $istanza = $cfg['DB_INSTANCE']
+    # "server\ISTANZA" nel nome: la porta non si usa, la fornisce SQL Server Browser.
+    if ($hostDb -match '^(.+?)\\(.+)$') { $hostDb = $Matches[1]; $istanza = $Matches[2] }
+    if ($istanza) {
+        Write-Info ("Istanza con nome {0} su {1}: la porta viene fornita dal servizio SQL Server Browser (UDP 1434)." -f $istanza, $hostDb)
+    } elseif ($cfg['DB_PORT']) {
+        if (Test-PortaTcp $hostDb ([int]$cfg['DB_PORT'])) { Write-Ok ("{0}:{1} raggiungibile" -f $hostDb, $cfg['DB_PORT']) }
+        else { Add-Problema ("Porta {0} di {1} non raggiungibile (TCP/IP disattivato in SQL Server, firewall, VPN?)" -f $cfg['DB_PORT'], $hostDb) }
     }
 }
 

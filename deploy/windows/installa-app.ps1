@@ -123,6 +123,11 @@ try {
         if ($locali.Count -gt 0) { $serverPred = 'localhost' }
         if (-not $DbServer) { $DbServer = Read-Valore 'Server SQL (nome o IP; localhost se e'' su questo computer)' $serverPred }
         if (-not $DbServer) { Stop-Errore 'Indicare il server SQL con -DbServer.' }
+        if ($DbServer -match '^(.+?)\\(.+)$' -and -not $DbIstanza) {
+            # "server\ISTANZA": istanza con nome raggiunta tramite SQL Server Browser (la porta non serve).
+            $DbServer = $Matches[1]
+            $DbIstanza = $Matches[2]
+        }
         if (-not $NonInterattivo -and -not $DbIstanza -and -not $PSBoundParameters.ContainsKey('DbPorta')) {
             $DbPorta = [int](Read-Valore 'Porta TCP di SQL Server' "$DbPorta")
         }

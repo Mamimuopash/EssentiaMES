@@ -196,18 +196,28 @@ try {
         $pwdApp = ''
     } else {
         Write-Passo "Login dell'applicazione ($LoginApp)"
+        $loginEsistente = Get-PrimaRiga $cnMaster 'SELECT name FROM sys.server_principals WHERE name = @n' @{ n = $LoginApp }
         $pwdApp = ConvertFrom-Protetta $PasswordApp
         $generata = $false
-        if (-not $pwdApp) { $pwdApp = Read-Segreto "Password per il login $LoginApp (Invio = generata automaticamente)" }
-        if (-not $pwdApp) { $pwdApp = New-PasswordSql; $generata = $true }
-        $esito = Invoke-SqlModello $cnMaster 'crea-login.sql' @{ login = $LoginApp; password = $pwdApp } | Select-Object -First 1
-        Write-Ok ("Login {0} {1}" -f $LoginApp, (Get-Campo $esito 'Esito'))
+        if (-not $pwdApp) {
+            # Rilanciando lo script (es. solo per -AggiornaSchema) la password gia' usata dall'app
+            # NON deve cambiare: con Invio resta quella attuale.
+            if ($loginEsistente) { $pwdApp = Read-Segreto "Il login $LoginApp esiste gia'. Nuova password (Invio = lascia quella attuale)" }
+            else { $pwdApp = Read-Segreto "Password per il login $LoginApp (Invio = generata automaticamente)" }
+        }
+        if (-not $pwdApp -and -not $loginEsistente) { $pwdApp = New-PasswordSql; $generata = $true }
+        if ($pwdApp) {
+            $esito = Invoke-SqlModello $cnMaster 'crea-login.sql' @{ login = $LoginApp; password = $pwdApp } | Select-Object -First 1
+            Write-Ok ("Login {0} {1}" -f $LoginApp, (Get-Campo $esito 'Esito'))
+        } else {
+            Write-Ok "Login $LoginApp gia' presente: password invariata"
+        }
         if ($dbEsiste) {
             $cnDb = New-Connessione -Server $serverAdmin -Database $Database -Utente $AdminSqlUtente -Password $pwdAdmin
             Invoke-SqlModello $cnDb 'associa-utente.sql' @{ login = $LoginApp } | Out-Null
             Write-Ok "Utente $LoginApp associato a $Database (db_datareader, db_datawriter)"
         }
-        if (-not ($riavvio -and $SenzaRiavvio)) {
+        if ($pwdApp -and -not ($riavvio -and $SenzaRiavvio)) {
             $dbProva = 'master'
             if ($dbEsiste) { $dbProva = $Database }
             $prova = Invoke-SqlModello (New-Connessione -Server $serverTcp -Database $dbProva -Utente $LoginApp -Password $pwdApp) 'prova-login.sql' | Select-Object -First 1
@@ -229,6 +239,8 @@ try {
         if ($generata) {
             Write-Host ("    Password   : {0}" -f $pwdApp) -ForegroundColor Yellow
             Write-Host '                 (generata ora: conservarla, non viene salvata da nessuna parte)' -ForegroundColor Yellow
+        } elseif (-not $pwdApp) {
+            Write-Host '    Password   : invariata (quella gia'' configurata nell''app)'
         } else {
             Write-Host '    Password   : quella indicata'
         }
