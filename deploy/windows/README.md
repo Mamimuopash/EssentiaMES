@@ -442,6 +442,7 @@ I registri di ogni esecuzione degli script sono in `C:\ProgramData\EssentiaMES\l
 
 | Sintomo | Causa probabile | Soluzione |
 | --- | --- | --- |
+| L'installazione sembra ferma (nessun messaggio nuovo) | un clic nella finestra ha attivato la "Modifica rapida" della console, che mette in pausa lo script (nel titolo compare "Seleziona"); oppure npm sta ancora scaricando/compilando | premere **Esc** nella finestra. Gli script aggiornati disattivano la Modifica rapida e ogni 30 secondi scrivono "... in corso da m:ss". `npm ci` e la compilazione richiedono 2–10 minuti ciascuno: con il pacchetto già compilato non servono |
 | `Failed to connect ... Could not connect` | TCP/IP disattivato, porta dinamica, firewall | `prepara-sql-server.ps1` sul server SQL; `-ConsentiDa <IP app>` |
 | `Login failed for user 'essentia_app'` | password errata o solo autenticazione Windows | rilanciare `prepara-sql-server.ps1` (reimposta la password), poi `installa-app.ps1 -RiscriviConfigurazione` |
 | Errore TLS / `handshake` / `key too small` | SQL Server 2008 R2–2014 non aggiornato | `-DbTlsLegacy` (o `DB_TLS_LEGACY='true'` nel file) oppure aggiornare SQL Server |

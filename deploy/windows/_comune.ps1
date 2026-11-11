@@ -40,6 +40,30 @@ $Componenti = @{
 
 # --------------------------------------------------------------------- output
 
+# "Modifica rapida" della console di Windows: un clic nella finestra seleziona del testo e
+# METTE IN PAUSA lo script finche' non si preme un tasto (sembra bloccato). La disattiviamo
+# per la sola finestra in uso.
+function Disable-ModificaRapida {
+    try {
+        if (-not ('EssentiaMES.Console' -as [type])) {
+            $firme = @'
+[DllImport("kernel32.dll", SetLastError = true)] public static extern IntPtr GetStdHandle(int nStdHandle);
+[DllImport("kernel32.dll", SetLastError = true)] public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+[DllImport("kernel32.dll", SetLastError = true)] public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+'@
+            Add-Type -MemberDefinition $firme -Name 'Console' -Namespace 'EssentiaMES' | Out-Null
+        }
+        $h = [EssentiaMES.Console]::GetStdHandle(-10)   # STD_INPUT_HANDLE
+        $modo = [uint32]0
+        if ([EssentiaMES.Console]::GetConsoleMode($h, [ref]$modo)) {
+            # toglie ENABLE_QUICK_EDIT_MODE (0x40), mantiene ENABLE_EXTENDED_FLAGS (0x80)
+            $nuovo = [uint32](([int64]$modo -band (-bnot [int64]0x40)) -bor 0x80)
+            [void][EssentiaMES.Console]::SetConsoleMode($h, $nuovo)
+        }
+    } catch { }
+}
+if ($env:OS -eq 'Windows_NT' -and $Host.Name -eq 'ConsoleHost') { Disable-ModificaRapida }
+
 function Write-Passo([string]$Testo) {
     Write-Host ''
     Write-Host "==> $Testo" -ForegroundColor Cyan
@@ -311,24 +335,50 @@ function Get-AppCompilata([string]$Radice, [string]$NodeExe, [switch]$Ricompila)
     if (-not (Test-Path (Join-Path $Radice 'package.json'))) {
         Stop-Errore "In $Radice non c'e' ne' un pacchetto compilato (cartella app) ne' il sorgente (package.json)."
     }
-    $npm = Join-Path (Split-Path $NodeExe) 'npm.cmd'
-    if (-not (Test-Path $npm)) { Stop-Errore "npm non trovato accanto a $NodeExe." }
     Push-Location $Radice
     try {
         $env:NEXT_TELEMETRY_DISABLED = '1'
-        Write-Info 'npm ci (scarica le dipendenze)...'
-        & $npm ci --no-audit --no-fund
-        if ($LASTEXITCODE -ne 0) { Stop-Errore "npm ci non riuscito (codice $LASTEXITCODE). Verificare l'accesso a registry.npmjs.org (proxy: npm config set proxy ...)." }
-        Write-Info 'npm run build (compilazione Next.js, qualche minuto)...'
+        Write-Info 'npm ci: scarica e installa le dipendenze (da 2 a 10 minuti; i messaggi "npm warn deprecated" sono normali).'
+        $codice = Invoke-Npm -NodeExe $NodeExe -Argomenti @('ci', '--no-audit', '--no-fund') -Descrizione 'npm ci'
+        if ($codice -ne 0) { Stop-Errore "npm ci non riuscito (codice $codice). Verificare l'accesso a registry.npmjs.org (proxy: npm config set proxy ...)." }
+        Write-Info 'npm run build: compilazione di Next.js (da 2 a 10 minuti).'
         $env:BUILD_STANDALONE = '1'
-        & $npm run build
-        $codice = $LASTEXITCODE
+        $codice = Invoke-Npm -NodeExe $NodeExe -Argomenti @('run', 'build') -Descrizione 'compilazione'
         Remove-Item Env:\BUILD_STANDALONE -ErrorAction SilentlyContinue
         if ($codice -ne 0) { Stop-Errore "Compilazione non riuscita (codice $codice)." }
     } finally { Pop-Location }
     $dest = Join-Path $Radice '.pacchetto\app'
     New-CartellaApp -Radice $Radice -Destinazione $dest
     return $dest
+}
+
+# Esegue npm (tramite node + npm-cli.js) e, finche' lavora, ogni 30 secondi scrive da quanto
+# tempo e' in corso: npm resta a lungo senza output e sembrerebbe bloccato.
+function Invoke-Npm([string]$NodeExe, [string[]]$Argomenti, [string]$Descrizione) {
+    $cli = Join-Path (Split-Path $NodeExe) 'node_modules\npm\bin\npm-cli.js'
+    if (-not (Test-Path $cli)) {
+        # Installazione di Node.js non standard: npm.cmd senza indicazione di avanzamento.
+        $npm = Join-Path (Split-Path $NodeExe) 'npm.cmd'
+        if (-not (Test-Path $npm)) { Stop-Errore "npm non trovato accanto a $NodeExe." }
+        & $npm @Argomenti
+        $c = $LASTEXITCODE
+        $global:LASTEXITCODE = 0
+        return $c
+    }
+    $riga = @('"' + $cli + '"') + $Argomenti
+    $orologio = [Diagnostics.Stopwatch]::StartNew()
+    $p = Start-Process -FilePath $NodeExe -ArgumentList $riga -WorkingDirectory (Get-Location).Path -NoNewWindow -PassThru
+    $null = $p.Handle   # necessario perche' ExitCode sia disponibile alla fine
+    $prossimo = 30
+    while (-not $p.WaitForExit(1000)) {
+        if ($orologio.Elapsed.TotalSeconds -ge $prossimo) {
+            Write-Host ("         ... {0} in corso da {1}:{2:00} (attendere, non chiudere la finestra)" -f $Descrizione, [int][math]::Floor($orologio.Elapsed.TotalMinutes), $orologio.Elapsed.Seconds) -ForegroundColor DarkGray
+            $prossimo += 30
+        }
+    }
+    $p.WaitForExit()
+    Write-Host ("         {0} terminato in {1}:{2:00}" -f $Descrizione, [int][math]::Floor($orologio.Elapsed.TotalMinutes), $orologio.Elapsed.Seconds) -ForegroundColor DarkGray
+    return $p.ExitCode
 }
 
 # Assembla l'app eseguibile dall'output "standalone" di Next.js.
