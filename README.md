@@ -70,6 +70,7 @@ database/
   migrazioni/001_...sql           giacenze da Id articolo a codice (una tantum, idempotente)
   migrazioni/002_...sql           indici consigliati (facoltativi)
   seed-demo.sql                   dati demo per test (NON in produzione)
+  mexal-vista-giacenze.sql        vista sulle giacenze di Mexal_Frontier (sync Mexal dal database)
   utente-sql-applicazione.sql     login SQL dedicato con permessi minimi
 scripts/                          db-init, db-check, create-user, e2e-smoke (Node puro)
 deploy/windows/                   installazione su Windows Server: servizio, IIS, SQL Server, porting DB
@@ -478,8 +479,9 @@ utenti storici se il repository è stato condiviso.
   Con più istanze dell'app lasciare `SCHEDULER_ENABLED=true` su una sola, oppure disattivarlo
   e usare un cron esterno:
   `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://mes.azienda.it/api/cron/ordini-automatici`.
-- **Sync Mexal da file**: il percorso configurato deve essere raggiungibile dal server
-  dell'app (es. cartella condivisa montata nel container); in alternativa usare l'import manuale.
+- **Sync Mexal**: due sorgenti, scelte nel pannello Automazioni:
+  - **database di Mexal**: vista `dbo.EssentiaMES_GiacenzeMexal` creata da `database/mexal-vista-giacenze.sql`, con colonne Articolo, Giacenza e, facoltative, Magazzino, ScortaMinima e InArrivo. Gli articoli assenti dall'anagrafica vengono ignorati e i magazzini sono salvati per Id, come fa la produzione;
+  - **file CSV**: il percorso configurato deve essere raggiungibile dal server dell'app (es. cartella condivisa montata nel container). In alternativa si usa l'import manuale.
 - **Backup**: database (piano di manutenzione SQL Server, come prima) + volume `/app/data`
   (documenti allegati).
 - **Aggiornamenti**: `git pull && docker compose up -d --build`; se il rilascio lo indica,

@@ -318,6 +318,33 @@ pacchetto) i file che lo script scaricherebbe. Vengono usati se l'hash corrispon
 - `rewrite_amd64_en-US.msi` e `requestRouter_amd64.msi` (solo con IIS). I link sono in
   `_comune.ps1`.
 
+### Giacenze da Mexal (database Mexal_Frontier)
+
+EssentiaMES può leggere le giacenze **direttamente dal database di Mexal**, senza file CSV.
+Lo script `database\mexal-vista-giacenze.sql` è già configurato per `Mexal_Frontier.dbo.Articoli`
+(`CKY_ART` = codice, `NMP_ESI` = esistenza):
+
+1. In SSMS aprire `database\mexal-vista-giacenze.sql` ed eseguirlo (F5) con un account
+   amministratore. Lo script:
+   - crea la vista `dbo.EssentiaMES_GiacenzeMexal` nel database **Brighetti**, dove resta
+     anche se Mexal_Frontier viene ricreato ogni giorno;
+   - dà a `essentia_app` la sola lettura delle colonne `CKY_ART`, `NMP_ESI`, `NMP_SMN` e
+     `NMP_QTAOF`, senza prezzi né altre colonne;
+   - mostra le prime righe.
+2. Nel pannello **Automazioni**, sezione Sincronizzazione Mexal:
+   - "Legge le giacenze direttamente dal database di Mexal" → **Attivo**;
+   - magazzino di EssentiaMES in cui scrivere le giacenze (nome o Id, es. `Magazzino Finito`);
+   - interruttore della sincronizzazione acceso e **ora** successiva all'aggiornamento
+     giornaliero di Mexal_Frontier.
+3. Pagina **Sincronizzazione Mexal** → "Sincronizza ora". La risposta indica righe lette,
+   aggiornate, create e **ignorate**: sono ignorati gli articoli che non esistono in
+   EssentiaMES, finché resta attivo "solo articoli presenti nell'anagrafica".
+
+Facoltativo: togliendo i `--` dalle due righe indicate nello script, la vista passa anche
+la **scorta minima** (`NMP_SMN`) e la **quantità ordinata a fornitori** (`NMP_QTAOF`).
+EssentiaMES le usa per decidere i riordini automatici, e i valori di Mexal sostituiscono
+quelli inseriti in EssentiaMES.
+
 ## 7. Passo 4 – Verifica e collaudo
 
 ```powershell
@@ -455,6 +482,8 @@ I registri di ogni esecuzione degli script sono in `C:\ProgramData\EssentiaMES\l
 | IIS: errore sulla porta 80/443 già in uso | il vecchio sito usa le stesse porte | `-NomeHost <nome>` oppure `-FermaSitoIIS "<sito>"` |
 | Avviso del browser sul certificato | certificato autofirmato | usare un certificato aziendale (`-CertificatoThumbprint`) o distribuire quello autofirmato ai client |
 | Sync Mexal: file non trovato | il servizio non vede la cartella di rete | percorso UNC, permessi all'account del computer o `-UtenteServizio` |
+| Sync Mexal da database: "permission denied" / "is not able to access the database" | manca il permesso su Mexal_Frontier, oppure il database è stato ricreato senza quel permesso | rieseguire `database\mexal-vista-giacenze.sql` in SSMS |
+| Sync Mexal: molte righe "ignorate" | codici articolo di Mexal diversi da quelli di EssentiaMES | confrontare i codici (es. spazi, maiuscole), oppure disattivare "solo articoli presenti nell'anagrafica" |
 | Restore: "database was backed up on a server running version ..." | nuovo SQL Server più vecchio | installare una versione uguale o successiva (§5) |
 | Download non riuscito | server senza Internet / proxy | [installazione offline](#installazione-senza-internet) |
 

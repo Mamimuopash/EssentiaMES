@@ -8,6 +8,9 @@ export interface MexalGiacenza {
   CodiceArticolo: string
   CodiceMagazzino: string
   Quantita: number
+  /** Facoltativi (lettura da database): se presenti aggiornano anche questi valori. */
+  ScortaMinima?: number
+  InArrivo?: number
 }
 
 /** Decodifica: UTF-8 (con o senza BOM), in fallback Windows-1252 (tipico degli export gestionali). */

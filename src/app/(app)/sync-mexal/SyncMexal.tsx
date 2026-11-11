@@ -12,10 +12,13 @@ export default function SyncMexal() {
       {esito && <div className="alert alert-info">{esito}</div>}
       <div className="card mb-3">
         <div className="card-header">
-          <strong>Esecuzione dal file configurato</strong>
+          <strong>Sincronizzazione dalla sorgente configurata</strong>
         </div>
         <div className="card-body">
-          <p className="text-muted">Legge il file CSV indicato nel pannello Automazioni (percorso raggiungibile dal server EssentiaMES) e aggiorna le giacenze.</p>
+          <p className="text-muted">
+            Legge le giacenze dalla sorgente scelta nel pannello Automazioni: la vista del database di Mexal oppure il file CSV
+            (percorso raggiungibile dal server EssentiaMES).
+          </p>
           <button
             className="btn btn-primary"
             disabled={busy}
