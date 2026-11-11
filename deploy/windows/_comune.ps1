@@ -338,8 +338,10 @@ function Get-AppCompilata([string]$Radice, [string]$NodeExe, [switch]$Ricompila)
     Push-Location $Radice
     try {
         $env:NEXT_TELEMETRY_DISABLED = '1'
+        # Solo le dipendenze di produzione (circa 210 pacchetti su 630): gli strumenti di sviluppo
+        # (ESLint, Vitest) non servono a compilare e allungherebbero molto il download.
         Write-Info 'npm ci: scarica e installa le dipendenze (da 2 a 10 minuti; i messaggi "npm warn deprecated" sono normali).'
-        $codice = Invoke-Npm -NodeExe $NodeExe -Argomenti @('ci', '--no-audit', '--no-fund') -Descrizione 'npm ci'
+        $codice = Invoke-Npm -NodeExe $NodeExe -Argomenti @('ci', '--omit=dev', '--no-audit', '--no-fund') -Descrizione 'npm ci'
         if ($codice -ne 0) { Stop-Errore "npm ci non riuscito (codice $codice). Verificare l'accesso a registry.npmjs.org (proxy: npm config set proxy ...)." }
         Write-Info 'npm run build: compilazione di Next.js (da 2 a 10 minuti).'
         $env:BUILD_STANDALONE = '1'

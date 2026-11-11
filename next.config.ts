@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/lotti/[id]/excel': ['./templates/**/*'],
   },
+  // La compilazione controlla i tipi senza i test: sul server si installano solo le
+  // dipendenze di produzione (npm ci --omit=dev), Vitest ed ESLint non ci sono.
+  typescript: { tsconfigPath: 'tsconfig.build.json' },
   poweredByHeader: false,
   async headers() {
     return [
