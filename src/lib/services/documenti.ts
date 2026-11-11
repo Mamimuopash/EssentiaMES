@@ -14,7 +14,8 @@ import { db } from '@/lib/db'
  */
 
 export function uploadDir(): string {
-  return path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), 'data', 'upload_documenti'))
+  // turbopackIgnore: cartella dati esterna all'app, da non includere nel bundle standalone.
+  return path.resolve(/* turbopackIgnore: true */ process.env.UPLOAD_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), 'data', 'upload_documenti'))
 }
 
 function radiciConsentite(): string[] {
@@ -22,7 +23,7 @@ function radiciConsentite(): string[] {
     .split(/[;,]/)
     .map((s) => s.trim())
     .filter(Boolean)
-    .map((s) => path.resolve(s))
+    .map((s) => path.resolve(/* turbopackIgnore: true */ s))
   return [uploadDir(), ...legacy]
 }
 

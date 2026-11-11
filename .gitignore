@@ -22,3 +22,7 @@ npm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# pacchetto Windows assemblato da deploy/windows
+.pacchetto/
+dist-windows/

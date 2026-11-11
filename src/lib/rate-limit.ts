@@ -12,3 +12,16 @@ export function consentiTentativo(key: string, max: number, windowMs: number): b
   b.count++
   return b.count <= max
 }
+
+/**
+ * IP del client dal primo valore di X-Forwarded-For. IIS/ARR per impostazione
+ * predefinita aggiunge anche la porta ("1.2.3.4:51234", "[::1]:51234"): la togliamo,
+ * altrimenti ogni connessione sembrerebbe un client diverso.
+ */
+export function ipClient(xForwardedFor: string | null | undefined): string {
+  let ip = (xForwardedFor || '').split(',')[0].trim()
+  const v6 = ip.match(/^\[([^\]]+)\](?::\d+)?$/)
+  if (v6) ip = v6[1]
+  else if (/^\d{1,3}(\.\d{1,3}){3}:\d+$/.test(ip)) ip = ip.slice(0, ip.lastIndexOf(':'))
+  return ip || 'locale'
+}

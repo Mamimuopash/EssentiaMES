@@ -1,5 +1,5 @@
 /* ============================================================================
-   EssentiaMES - Schema database (SQL Server 2016+)
+   EssentiaMES - Schema database (SQL Server 2012 o successivo)
    ----------------------------------------------------------------------------
    Schema completo usato dall'applicazione Next.js. E' lo stesso database della
    vecchia applicazione ASP.NET (VB.NET / Entity Framework 6): nomi di tabelle e
@@ -16,6 +16,16 @@
    ============================================================================ */
 
 SET NOCOUNT ON;
+GO
+
+/* Livello di compatibilita': TRY_CONVERT e OFFSET/FETCH richiedono almeno 110
+   (SQL Server 2012). I database migrati da SQL Server 2008 possono essere a 100. */
+IF (SELECT compatibility_level FROM sys.databases WHERE name = DB_NAME()) < 110
+BEGIN
+    DECLARE @compat NVARCHAR(300) = N'ALTER DATABASE ' + QUOTENAME(DB_NAME()) + N' SET COMPATIBILITY_LEVEL = 110';
+    EXEC (@compat);
+    PRINT 'Livello di compatibilita'' del database portato a 110 (richiesto da EssentiaMES).';
+END
 GO
 
 /* ---------------------------------------------------------------- IDENTITY */

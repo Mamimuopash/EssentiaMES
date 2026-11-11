@@ -2,10 +2,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { authenticate, sessionCookieOptions } from '@/lib/auth/auth'
 import { SESSION_COOKIE } from '@/lib/auth/session'
 import { safeLog, L } from '@/lib/audit'
-import { consentiTentativo } from '@/lib/rate-limit'
+import { consentiTentativo, ipClient } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
-  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'locale'
+  const ip = ipClient(req.headers.get('x-forwarded-for'))
   if (!consentiTentativo(`login:${ip}`, 20, 60_000)) {
     return NextResponse.json({ ok: false, message: 'Troppi tentativi di accesso. Riprova tra un minuto.' }, { status: 429 })
   }

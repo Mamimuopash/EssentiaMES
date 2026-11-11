@@ -1,0 +1,143 @@
+# Pacchetto di installazione per Windows Server e prova completa degli script di
+# deploy/windows su un Windows Server con SQL Server 2022 Express appena installato:
+# preparazione di SQL Server, porting del database, installazione come servizio,
+# test end-to-end (diretto e tramite IIS in HTTPS), aggiornamento e disinstallazione.
+# Il pacchetto pronto da installare si scarica dagli "Artifacts" dell'esecuzione.
+name: Windows
+
+on:
+  push:
+    paths:
+      - 'deploy/windows/**'
+      - '.github/workflows/windows.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pacchetto:
+    name: Pacchetto
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: crea-pacchetto.ps1
+        shell: powershell
+        run: .\deploy\windows\crea-pacchetto.ps1 -Uscita dist-windows -SenzaZip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EssentiaMES-windows
+          path: dist-windows/
+          include-hidden-files: true
+          retention-days: 14
+
+  installazione:
+    name: Installazione e test
+    needs: pacchetto
+    runs-on: windows-2022
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: powershell
+    env:
+      PWD_APP: 'Ci.Essentia!2026'
+      PWD_SA: 'Ci.Sa!2026xy'
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          name: EssentiaMES-windows
+          path: pkg
+
+      - name: SQL Server 2022 Express (installazione predefinita, TCP disattivato)
+        run: |
+          choco install sql-server-express -y --no-progress
+          Get-Service 'MSSQL$SQLEXPRESS'
+          $pkg = (Get-ChildItem pkg -Directory | Select-Object -First 1).FullName
+          Add-Content -Path $env:GITHUB_ENV -Value "PKG=$pkg"
+
+      - name: prepara-sql-server.ps1
+        run: |
+          & "$env:PKG\deploy\windows\prepara-sql-server.ps1" -Istanza SQLEXPRESS -Porta 1433 -Database Brighetti `
+            -PasswordApp (ConvertTo-SecureString $env:PWD_APP -AsPlainText -Force) -ConsentiDa 127.0.0.1 -NonInterattivo
+
+      - name: Database di origine con dati demo (solo per il test)
+        run: |
+          $cn = New-Object System.Data.SqlClient.SqlConnection 'Server=tcp:127.0.0.1,1433;Database=master;Integrated Security=True'
+          $cn.Open()
+          $cmd = $cn.CreateCommand()
+          $cmd.CommandText = "ALTER LOGIN [sa] WITH PASSWORD = N'$env:PWD_SA'; ALTER LOGIN [sa] ENABLE;"
+          [void]$cmd.ExecuteNonQuery()
+          $cn.Close()
+          Push-Location "$env:PKG\app"
+          $env:DB_SERVER = '127.0.0.1'; $env:DB_PORT = '1433'; $env:DB_NAME = 'BrighettiVecchio'
+          $env:DB_USER = 'sa'; $env:DB_PASSWORD = $env:PWD_SA; $env:DB_TRUST_SERVER_CERTIFICATE = 'true'
+          node scripts\db-init.mjs --create-db --migrazioni --seed
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Pop-Location
+
+      - name: porting-database.ps1
+        run: |
+          & "$env:PKG\deploy\windows\porting-database.ps1" -ServerOrigine 'tcp:127.0.0.1,1433' -DatabaseOrigine BrighettiVecchio `
+            -ServerDestinazione '.\SQLEXPRESS' -DatabaseDestinazione Brighetti -Migrazioni -NonInterattivo
+
+      - name: installa-app.ps1 (Node.js da MSI, servizio Windows)
+        run: |
+          & "$env:PKG\deploy\windows\installa-app.ps1" -DbServer localhost -DbPorta 1433 -DbNome Brighetti -DbUtente essentia_app `
+            -DbPassword (ConvertTo-SecureString $env:PWD_APP -AsPlainText -Force) -AggiornaNode -NonInterattivo
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Get-CimInstance Win32_Service -Filter "Name='EssentiaMES'" | Format-List Name, State, StartMode, StartName, PathName
+
+      - name: verifica.ps1
+        run: '& C:\EssentiaMES\strumenti\verifica.ps1'
+
+      - name: Test end-to-end (http://localhost:3000)
+        run: |
+          $env:CRON_SECRET = (Select-String -Path C:\EssentiaMES\config\essentia.env -Pattern "^CRON_SECRET='(.*)'$").Matches[0].Groups[1].Value
+          $env:DB_SERVER = '127.0.0.1'; $env:DB_PORT = '1433'; $env:DB_NAME = 'Brighetti'
+          $env:DB_USER = 'sa'; $env:DB_PASSWORD = $env:PWD_SA; $env:DB_TRUST_SERVER_CERTIFICATE = 'true'
+          $env:BASE_URL = 'http://localhost:3000'
+          node "$env:PKG\app\scripts\e2e-smoke.mjs"
+
+      - name: installa-app.ps1 -ConIIS (IIS + ARR, HTTPS autofirmato)
+        run: |
+          Add-Content -Path "$env:windir\System32\drivers\etc\hosts" -Value "`r`n127.0.0.1 essentia.test"
+          & "$env:PKG\deploy\windows\installa-app.ps1" -ConIIS -NomeHost essentia.test -CertificatoAutofirmato -NonInterattivo
+
+      - name: Test end-to-end tramite IIS (https://essentia.test)
+        run: |
+          $env:CRON_SECRET = (Select-String -Path C:\EssentiaMES\config\essentia.env -Pattern "^CRON_SECRET='(.*)'$").Matches[0].Groups[1].Value
+          $env:DB_SERVER = '127.0.0.1'; $env:DB_PORT = '1433'; $env:DB_NAME = 'Brighetti'
+          $env:DB_USER = 'sa'; $env:DB_PASSWORD = $env:PWD_SA; $env:DB_TRUST_SERVER_CERTIFICATE = 'true'
+          $env:BASE_URL = 'https://essentia.test'
+          $env:NODE_TLS_REJECT_UNAUTHORIZED = '0'
+          node "$env:PKG\app\scripts\e2e-smoke.mjs"
+
+      - name: aggiorna-app.ps1
+        run: '& "$env:PKG\deploy\windows\aggiorna-app.ps1" -NonInterattivo'
+
+      - name: disinstalla-app.ps1
+        run: |
+          & C:\EssentiaMES\strumenti\disinstalla-app.ps1 -RimuoviIIS -NonInterattivo
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          if (Get-Service EssentiaMES -ErrorAction SilentlyContinue) { throw 'Il servizio EssentiaMES e'' ancora presente' }
+
+      - name: Log in caso di errore
+        if: failure()
+        run: |
+          $file = @(Get-ChildItem C:\EssentiaMES\logs, "$env:ProgramData\EssentiaMES\log-installazione" -File -ErrorAction SilentlyContinue)
+          foreach ($f in $file) { "===== $($f.FullName)"; Get-Content $f.FullName -Tail 120 }

@@ -31,6 +31,10 @@ export function buildConfig(database) {
     trustServerCertificate: bool(process.env.DB_TRUST_SERVER_CERTIFICATE, false),
     appName: 'EssentiaMES-Script',
   }
+  if (bool(process.env.DB_TLS_LEGACY, false)) {
+    // Vedi src/lib/db.ts: SQL Server datati (TLS 1.0 / certificato debole).
+    options.cryptoCredentialsDetails = { minVersion: 'TLSv1', ciphers: 'DEFAULT:@SECLEVEL=0', secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT }
+  }
   if (process.env.DB_CONNECTION_STRING) {
     const parsed = sql.ConnectionPool.parseConnectionString(process.env.DB_CONNECTION_STRING)
     const cfg = { ...parsed, options: { ...(parsed.options || {}), ...options, encrypt: parsed.options?.encrypt ?? options.encrypt } }

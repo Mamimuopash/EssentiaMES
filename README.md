@@ -12,6 +12,9 @@ della precedente applicazione ASP.NET MVC (VB.NET, Entity Framework 6).
   così come sono (nessun reset password).
 - Pensato per girare **fuori dall'azienda** (VPS/cloud) collegandosi al SQL
   Server aziendale in modo sicuro (VPN/Tailscale, TLS).
+- **Windows Server 2016+**: installazione come servizio Windows (con IIS/HTTPS
+  facoltativo), preparazione di SQL Server e porting del database automatizzati dagli
+  script in [`deploy/windows`](deploy/windows/README.md).
 
 ---
 
@@ -69,6 +72,9 @@ database/
   seed-demo.sql                   dati demo per test (NON in produzione)
   utente-sql-applicazione.sql     login SQL dedicato con permessi minimi
 scripts/                          db-init, db-check, create-user, e2e-smoke (Node puro)
+deploy/windows/                   installazione su Windows Server: servizio, IIS, SQL Server, porting DB
+  README.md                       guida passo passo per Windows Server 2016
+.github/workflows/windows.yml     pacchetto Windows + prova completa dell'installazione (Actions)
 src/
   app/(app)/...                   pagine autenticate (dashboard, operatore, anagrafiche, ...)
   app/api/...                     API JSON usate dalle pagine
@@ -87,8 +93,10 @@ Dockerfile, docker-compose.yml    immagine di produzione e deploy con Tailscale
 
 ## 3. Requisiti
 
-- **Node.js 20.9+** (consigliato 22 LTS) oppure **Docker**.
-- **SQL Server 2016 o successivo** (quello attuale dell'azienda va bene), con TCP/IP abilitato.
+- **Node.js 20.9+** (consigliato 22/24 LTS) oppure **Docker**. Su Windows Server lo
+  installa lo script di installazione.
+- **SQL Server 2012 o successivo** (quello attuale dell'azienda va bene), con TCP/IP abilitato
+  e livello di compatibilità del database almeno 110 (`schema.sql` lo imposta da solo).
 - Connettività di rete dal server che ospita l'app al SQL Server (vedi §6).
 
 ## 4. Configurazione
@@ -186,7 +194,19 @@ Verifica rapida dal server applicativo: `npm run db:check` (o dentro Docker:
 
 ## 7. Deploy
 
-### 7.1 Docker Compose + Tailscale (consigliato)
+### 7.0 Windows Server 2016 / 2019 / 2022 (servizio Windows)
+
+Guida completa: **[deploy/windows/README.md](deploy/windows/README.md)**. In breve, con il
+pacchetto scaricato da GitHub Actions (workflow *Windows* → Artifacts):
+
+1. sul server SQL: `deploy\windows\PREPARA-SQL-SERVER.cmd` (TCP/IP, autenticazione mista, login
+   `essentia_app`, backup e `schema.sql`);
+2. solo se il database va spostato su un nuovo SQL Server: `PORTING-DATABASE.cmd`;
+3. sul server dell'app: `INSTALLA.cmd` (Node.js, servizio Windows "EssentiaMES", firewall o
+   IIS con HTTPS);
+4. `C:\EssentiaMES\strumenti\VERIFICA.cmd`.
+
+### 7.1 Docker Compose + Tailscale (consigliato su Linux)
 
 ```bash
 git clone <repo> essentia-mes && cd essentia-mes
@@ -225,8 +245,9 @@ npm ci
 npm run build
 npm start                    # porta 3000 (variabile PORT per cambiarla)
 ```
-Per tenerlo attivo: `pm2 start npm --name essentia -- start` (Linux/Windows) oppure un servizio
-systemd / NSSM. Impostare le variabili di §4 (file `.env.production` o ambiente di sistema).
+Per tenerlo attivo: `pm2 start npm --name essentia -- start` oppure un servizio systemd.
+Impostare le variabili di §4 (file `.env.production` o ambiente di sistema).
+Su Windows Server usare gli script di §7.0, che registrano un vero servizio Windows.
 
 ### 7.5 Piattaforme serverless (Vercel e simili)
 
@@ -237,6 +258,9 @@ Se proprio necessario: `SCHEDULER_ENABLED=false`, cron della piattaforma su
 e uno storage persistente per `UPLOAD_DIR`.
 
 ## 8. Migrazione dal vecchio software (IIS)
+
+Su Windows Server i passi seguenti sono automatizzati da `deploy/windows`
+(vedi [go-live](deploy/windows/README.md#8-passaggio-dal-vecchio-software-go-live)).
 
 1. **Backup** completo del database da SSMS (*Tasks → Back Up...*).
 2. Eseguire `database/schema.sql` (+ `migrazioni/001`) sul database (§5.1).
@@ -337,6 +361,20 @@ Lo stesso script si può lanciare contro l'immagine Docker (`BASE_URL=http://hos
 | Admin | Sync Mexal: import CSV di prova; eventuale file configurato |
 | Admin | Dashboard Utenti: storico ODP con dettaglio fasi; crea/reimposta/cancella utente |
 | Admin | Tabelle `Audit` e `Log` in SSMS: le operazioni risultano tracciate come prima |
+
+### 9.5 Test dell'installazione su Windows Server
+
+Il workflow GitHub Actions **Windows** (`.github/workflows/windows.yml`) parte a ogni modifica
+di `deploy/windows` (o a mano da *Actions → Windows → Run workflow*) e, su un Windows
+Server pulito con SQL Server 2022 Express:
+1. crea il pacchetto;
+2. prepara SQL Server;
+3. esegue il porting di un database demo;
+4. installa il servizio;
+5. esegue `verifica.ps1` e questo stesso test end-to-end, sia diretto sia tramite IIS in HTTPS;
+6. prova aggiornamento e disinstallazione.
+
+Dettagli in [deploy/windows/README.md §13](deploy/windows/README.md#13-come-sono-stati-provati-gli-script).
 
 ## 10. Funzionalità e corrispondenza con il vecchio software
 
@@ -444,4 +482,8 @@ utenti storici se il repository è stato condiviso.
 - **Backup**: database (piano di manutenzione SQL Server, come prima) + volume `/app/data`
   (documenti allegati).
 - **Aggiornamenti**: `git pull && docker compose up -d --build`; se il rilascio lo indica,
-  rieseguire `database/schema.sql` (idempotente).
+  rieseguire `database/schema.sql` (idempotente). Su Windows Server: `AGGIORNA.cmd` dal nuovo
+  pacchetto (ritorno automatico alla versione precedente se la nuova non parte).
+- **Windows Server**: servizio `EssentiaMES` (`Restart-Service EssentiaMES`), configurazione in
+  `C:\EssentiaMES\config\essentia.env`, log in `C:\EssentiaMES\logs`, diagnostica con
+  `C:\EssentiaMES\strumenti\VERIFICA.cmd`.

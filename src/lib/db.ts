@@ -1,4 +1,5 @@
 import 'server-only'
+import { constants as cryptoConstants } from 'node:crypto'
 import sql from 'mssql'
 
 /*
@@ -44,6 +45,15 @@ export function buildConfig(): sql.config {
     encrypt: bool(process.env.DB_ENCRYPT, true),
     trustServerCertificate: bool(process.env.DB_TRUST_SERVER_CERTIFICATE, false),
     appName: 'EssentiaMES-Next',
+  }
+  if (bool(process.env.DB_TLS_LEGACY, false)) {
+    // SQL Server 2008 R2 / 2012 / 2014 senza aggiornamenti TLS 1.2 o con certificato
+    // autogenerato debole: Node li rifiuterebbe con le impostazioni TLS predefinite.
+    options.cryptoCredentialsDetails = {
+      minVersion: 'TLSv1',
+      ciphers: 'DEFAULT:@SECLEVEL=0',
+      secureOptions: cryptoConstants.SSL_OP_LEGACY_SERVER_CONNECT,
+    }
   }
   const pool = {
     max: Number(process.env.DB_POOL_MAX || 10),

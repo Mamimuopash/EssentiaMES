@@ -7,3 +7,5 @@ data
 *.log
 tests
 _legacy_assets
+.pacchetto
+dist-windows
