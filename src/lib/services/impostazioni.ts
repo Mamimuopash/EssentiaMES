@@ -50,7 +50,7 @@ export const ELENCO_DEFAULT: Default[] = [
   { chiave: Chiavi.SyncMexalAbilitato, valore: 'false', tipo: TipoImpostazione.Booleano, categoria: 'Sincronizzazione Mexal',
     descrizione: "Abilita l'aggiornamento giornaliero delle giacenze dal gestionale Mexal." },
   { chiave: Chiavi.SyncMexalPercorsoFile, valore: '', tipo: TipoImpostazione.Testo, categoria: 'Sincronizzazione Mexal',
-    descrizione: 'Percorso del file CSV esportato da Mexal con le giacenze, raggiungibile dal server dove gira EssentiaMES (es. /mnt/mexal/giacenze.csv).' },
+    descrizione: "Percorso del file CSV esportato da Mexal con le giacenze (es. \\\\server\\export\\giacenze.csv), leggibile dall'account del servizio EssentiaMES." },
   { chiave: Chiavi.SyncMexalSeparatore, valore: ';', tipo: TipoImpostazione.Testo, categoria: 'Sincronizzazione Mexal',
     descrizione: 'Carattere separatore delle colonne nel file CSV (di norma ; oppure ,).' },
   { chiave: Chiavi.LottiCreazioneAutomaticaAbilitato, valore: 'false', tipo: TipoImpostazione.Booleano, categoria: 'Gestione Lotti',
