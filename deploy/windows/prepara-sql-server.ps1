@@ -95,20 +95,30 @@ try {
         $proc = Get-Process -Id $occupata[0].OwningProcess -ErrorAction SilentlyContinue
         Stop-Errore ("La porta {0} e' gia' usata da {1} (PID {2}): scegliere un'altra porta con -Porta." -f $Porta, $proc.ProcessName, $occupata[0].OwningProcess)
     }
-    if ([int]$tcp.Enabled -ne 1) {
+    # Altri programmi possono gia' collegarsi a questa istanza sulle porte attuali (fisse o
+    # dinamica): restano tutte attive, la porta per EssentiaMES si AGGIUNGE.
+    $tcpGiaAttivo = ([int]$tcp.Enabled -eq 1)
+    $porteFisse = @("$($ipAll.TcpPort)".Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if (-not $tcpGiaAttivo) {
         Set-ItemProperty -Path $chiaveTcp -Name Enabled -Value 1 -Type DWord
         $riavvio = $true
     }
-    if ([int]$tcp.ListenOnAllIPs -ne 1) {
+    if ([int]$tcp.ListenOnAllIPs -ne 1 -and -not $tcpGiaAttivo) {
         Set-ItemProperty -Path $chiaveTcp -Name ListenOnAllIPs -Value 1 -Type DWord
         $riavvio = $true
+    } elseif ([int]$tcp.ListenOnAllIPs -ne 1) {
+        Write-Avviso 'TCP/IP e'' configurato per singoli indirizzi IP: lasciato com''e''. Verificare la porta in SQL Server Configuration Manager.'
     }
-    if ("$($ipAll.TcpPort)" -ne "$Porta" -or "$($ipAll.TcpDynamicPorts)" -ne '') {
-        Set-ItemProperty -Path $chiaveIpAll -Name TcpPort -Value "$Porta"
+    if ($porteFisse -notcontains "$Porta") {
+        Set-ItemProperty -Path $chiaveIpAll -Name TcpPort -Value ((@("$Porta") + $porteFisse) -join ',')
+        $riavvio = $true
+    }
+    if (-not $tcpGiaAttivo -and "$($ipAll.TcpDynamicPorts)" -ne '') {
+        # TCP era spento: nessun programma usava la porta dinamica, si puo' togliere.
         Set-ItemProperty -Path $chiaveIpAll -Name TcpDynamicPorts -Value ''
         $riavvio = $true
     }
-    if ($riavvio) { Write-Ok "TCP/IP abilitato sulla porta $Porta (attivo dopo il riavvio)" } else { Write-Ok 'Gia'' configurato' }
+    if ($riavvio) { Write-Ok "Porta $Porta aggiunta (attiva dopo il riavvio); le porte gia' configurate restano attive" } else { Write-Ok 'Gia'' configurato' }
 
     # ------------------------------------------------- autenticazione mista
     Write-Passo 'Autenticazione'
@@ -129,14 +139,20 @@ try {
         if ($SenzaRiavvio) {
             Write-Avviso "Riavvio saltato (-SenzaRiavvio): riavviare il servizio $($ist.Servizio) per applicare le modifiche."
         } else {
-            Write-Avviso 'Le connessioni aperte verso SQL Server verranno chiuse per qualche secondo.'
+            Write-Avviso 'Per qualche secondo si interrompono TUTTE le connessioni a questa istanza (anche di altri programmi).'
+            # -Force ferma anche i servizi che dipendono da SQL Server (SQL Agent, servizi di altri
+            # programmi): quelli che erano avviati vengono fatti ripartire.
+            $dipendenti = @(Get-Service -Name $ist.Servizio -DependentServices | Where-Object { $_.Status -eq 'Running' })
             Restart-Service -Name $ist.Servizio -Force
             (Get-Service -Name $ist.Servizio).WaitForStatus('Running', [TimeSpan]::FromSeconds(120))
-            # Riavvia anche SQL Server Agent se era stato fermato insieme al motore.
-            $agente = 'SQLSERVERAGENT'
-            if ($ist.Nome -ne 'MSSQLSERVER') { $agente = 'SQLAgent$' + $ist.Nome }
-            $sa = Get-Service -Name $agente -ErrorAction SilentlyContinue
-            if ($sa -and $sa.StartType -eq 'Automatic' -and $sa.Status -ne 'Running') { Start-Service $agente -ErrorAction SilentlyContinue }
+            foreach ($d in $dipendenti) {
+                try {
+                    Start-Service -Name $d.Name
+                    Write-Ok "Riavviato anche $($d.DisplayName)"
+                } catch {
+                    Write-Avviso "Non riesco a riavviare $($d.DisplayName): avviarlo a mano (services.msc)."
+                }
+            }
             Write-Ok 'Servizio riavviato'
         }
     }
