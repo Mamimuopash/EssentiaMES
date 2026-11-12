@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>EssentiaMES - Scheda rapida operatore</title>
+<link rel="stylesheet" href="stile.css">
+<style>
+  @page { size: A4; margin: 10mm 11mm 10mm 11mm; }
+  body { font-size: 10pt; }
+  .testa { display: flex; align-items: center; gap: 5mm; border-bottom: 1.2mm solid var(--viola); padding-bottom: 3mm; margin-bottom: 4mm; }
+  .testa img { width: 15mm; }
+  .testa h1 { font-size: 20pt; }
+  .testa .s { color: var(--grigio); font-size: 10pt; }
+  .griglia { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5mm; }
+  .passo { border: 1px solid var(--bordo); border-radius: 3mm; padding: 3mm 3.5mm; display: flex; gap: 3mm; page-break-inside: avoid; }
+  .passo .n { flex: 0 0 10mm; height: 10mm; border-radius: 50%; background: var(--viola); color: white; font-weight: 700; font-size: 14pt; display: flex; align-items: center; justify-content: center; }
+  .passo h3 { margin: 0 0 1mm 0; font-size: 11.5pt; }
+  .passo p { margin: 0; font-size: 9.3pt; line-height: 1.4; }
+  .passo img { width: 100%; border: 1px solid var(--bordo); border-radius: 1.5mm; margin-top: 2mm; }
+  .fondo { display: grid; grid-template-columns: 1.1fr 1fr; gap: 3.5mm; margin-top: 3.5mm; }
+  .fondo .box { margin: 0; font-size: 9.3pt; }
+</style>
+</head>
+<body>
+  <div class="testa">
+    <img src="../../public/assets/Logo.png" alt="">
+    <div>
+      <h1>Postazione macchina · Scheda rapida</h1>
+      <div class="s">EssentiaMES · versione {{DATA}} · procedure complete: Account → “Procedure operatore (PDF)”</div>
+    </div>
+  </div>
+
+  <div class="griglia">
+    <div class="passo"><div class="n">1</div><div>
+      <h3>Accedi</h3>
+      <p>Apri EssentiaMES, scrivi <b>il tuo</b> utente e la password, poi premi <span class="tasto">Accedi</span>. Vedi le attività della tua macchina.</p>
+      <img src="img/op-02-lista.jpg" alt="">
+    </div></div>
+    <div class="passo"><div class="n">2</div><div>
+      <h3>Scegli e avvia</h3>
+      <p>Tocca l'attività, controlla articolo e quantità e scegli <b>Attrezzaggio</b> (devi preparare la macchina) oppure <b>Lavorazione</b> (la macchina è già pronta). Poi premi <span class="tasto">Avvia Attività</span>.</p>
+      <img src="img/op-03-avvio.jpg" alt="">
+    </div></div>
+    <div class="passo"><div class="n">3</div><div>
+      <h3>Fine attrezzaggio</h3>
+      <p>Premi <span class="tasto">Concludi attività</span>, indica gli eventuali pezzi di prova (buoni e scarti) e premi <span class="tasto">Salva</span>: si passa da soli <b>In Lavorazione</b>.</p>
+    </div></div>
+    <div class="passo"><div class="n">4</div><div>
+      <h3>Pausa, fine turno, guasto</h3>
+      <p>Premi <span class="tasto rosso">Sospendi attività</span>, inserisci le quantità <b>totali fatte finora</b> e premi <span class="tasto">Salva</span>. Per riprendere tocca l'attività “precedentemente aperta” e avviala.</p>
+    </div></div>
+    <div class="passo"><div class="n">5</div><div>
+      <h3>Fine lavoro</h3>
+      <p>Premi <span class="tasto">Concludi attività</span> e scrivi il <b>TOTALE</b> dei pezzi buoni e il <b>TOTALE</b> degli scarti della fase. Raggiunta la quantità, i pezzi passano alla fase successiva; altrimenti resta un parziale in lista.</p>
+      <img src="img/op-12-concludi.jpg" alt="">
+    </div></div>
+    <div class="passo"><div class="n">6</div><div>
+      <h3>Note, documenti, attività inutili</h3>
+      <p>Nella finestra dell'attività le schede <b>Note</b> e <b>Documenti</b> contengono disegni e istruzioni; <span class="tasto">Inserisci note</span> lascia un messaggio a chi viene dopo. <span class="tasto bianco">Nascondi</span> toglie dalla lista un'attività inutile, <span class="tasto bianco">Mostra</span> la fa rivedere.</p>
+    </div></div>
+  </div>
+
+  <div class="fondo">
+    <div class="box consiglio"><span class="t">Regole d'oro</span>
+      <ul>
+        <li>Usa sempre e solo il tuo utente.</li>
+        <li>Una sola attività avviata per macchina.</li>
+        <li>Avvia quando inizi, sospendi quando ti fermi: i tempi arrivano ogni settimana ai responsabili.</li>
+        <li>Le quantità sono sempre il totale della fase.</li>
+        <li>A fine turno: <b>sospendi</b> (o concludi) e fai il <b>Logout</b>.</li>
+      </ul>
+    </div>
+    <div class="box attenzione"><span class="t">Problemi?</span>
+      <ul>
+        <li><b>Nessuna macchina associata</b>: chiedi al responsabile.</li>
+        <li><b>L'attività non c'è</b>: premi “Mostra”, altrimenti è bloccata dalla fase precedente.</li>
+        <li><b>Quantità o attività sbagliate</b>: sospendi e avvisa subito il responsabile.</li>
+        <li><b>Pagina bloccata</b>: premi F5. Se non riparte, avvisa il responsabile.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>EssentiaMES - Procedure operatore</title>
+<link rel="stylesheet" href="stile.css">
+</head>
+<body>
+
+<div class="copertina">
+  <img class="logo" src="../../public/assets/Logo.png" alt="">
+  <div class="tipo">EssentiaMES · Manuale operativo</div>
+  <h1>Procedure operatore</h1>
+  <div class="sotto">Cosa fare alla postazione macchina: accesso, avvio delle attività, attrezzaggio, lavorazione, pause, chiusura con le quantità, note e documenti.</div>
+  <div class="meta">Versione {{DATA}} · Per la consultazione rapida a bordo macchina c'è anche la <b>Scheda rapida operatore</b> (una pagina). Entrambi i documenti si aprono da EssentiaMES: icona <b>Account</b> in basso a destra.</div>
+</div>
+
+<div class="indice">
+  <h2>Indice</h2>
+  <ol>
+    <li><span class="n">1</span>Regole di base<span class="d">da leggere prima di iniziare</span></li>
+    <li><span class="n">2</span>Accedere a EssentiaMES<span class="d">utente, password, macchina associata</span></li>
+    <li><span class="n">3</span>La lista delle attività<span class="d">cosa c'è da fare sulla tua macchina</span></li>
+    <li><span class="n">4</span>Avviare un'attività<span class="d">attrezzaggio oppure lavorazione</span></li>
+    <li><span class="n">5</span>Note e documenti della macchina<span class="d">disegni, istruzioni, comunicazioni</span></li>
+    <li><span class="n">6</span>Attività in corso<span class="d">la schermata con il tempo che scorre</span></li>
+    <li><span class="n">7</span>Finire l'attrezzaggio<span class="d">e passare alla lavorazione</span></li>
+    <li><span class="n">8</span>Sospendere e riprendere<span class="d">pausa, fine turno, guasto, attesa materiale</span></li>
+    <li><span class="n">9</span>Concludere la lavorazione<span class="d">quantità prodotte e scarti</span></li>
+    <li><span class="n">10</span>Nascondere le attività inutili<span class="d">e rimetterle in lista</span></li>
+    <li><span class="n">11</span>Account: password e uscita<span class="d">e dove trovare queste procedure</span></li>
+    <li><span class="n">12</span>Problemi frequenti<span class="d">cosa fare se qualcosa non va</span></li>
+  </ol>
+</div>
+
+<!-- 1 -->
+<section class="proc" style="page-break-before:auto">
+  <h2><span class="num">1</span>Regole di base</h2>
+  <p>EssentiaMES registra cosa si lavora su ogni macchina, per quanto tempo e con quali quantità. Questi dati muovono i pezzi da un reparto all'altro, aggiornano i magazzini e vengono inviati ogni settimana ai responsabili con il resoconto dell'uso di ogni macchina. Per questo è importante registrare tutto nel momento in cui succede.</p>
+  <ul class="semplice">
+    <li><b>Ognuno usa il proprio utente.</b> Non lavorare con l'utente di un collega: tempi e quantità risulterebbero a suo nome.</li>
+    <li><b>Una sola attività alla volta per macchina.</b> Prima di iniziarne un'altra, sospendi o concludi quella in corso.</li>
+    <li><b>Avvia l'attività quando inizi davvero</b> (attrezzaggio o lavorazione) e <b>sospendila quando ti fermi</b>: pausa lunga, fine turno, guasto, attesa materiale.</li>
+    <li><b>Le quantità sono sempre il TOTALE</b> della fase: pezzi buoni in “Q.tà Prodotta”, pezzi da buttare in “Q.tà scartata”. Non indicare solo i pezzi fatti dall'ultima ripresa.</li>
+    <li>Se una registrazione è sbagliata, <b>avvisa subito il responsabile</b>: non “compensare” con la registrazione successiva.</li>
+  </ul>
+  <h3>Gli stati di un'attività</h3>
+  <table>
+    <tr><th style="width:42mm">Stato</th><th>Significato</th></tr>
+    <tr><td>In attesa</td><td>Da fare: è nella tua lista e si può avviare.</td></tr>
+    <tr><td>In attrezzaggio</td><td>Stai preparando la macchina (montaggio, azzeramenti, programma, primo pezzo). Il tempo viene registrato come attrezzaggio.</td></tr>
+    <tr><td>In lavorazione</td><td>Stai producendo. Il tempo viene registrato come lavorazione.</td></tr>
+    <tr><td>Sospesa</td><td>Avviata e poi messa in pausa: in lista compare la scritta “(Attività precedentemente aperta)”.</td></tr>
+    <tr><td>Completata</td><td>Quantità raggiunta: la fase è chiusa e i pezzi passano alla fase successiva.</td></tr>
+    <tr><td>Bloccata</td><td>La fase precedente dello stesso ordine non è ancora finita: non compare nella tua lista finché non viene sbloccata.</td></tr>
+  </table>
+</section>
+
+<!-- 2 -->
+<section class="proc">
+  <h2><span class="num">2</span>Accedere a EssentiaMES</h2>
+  <div class="quando"><b>Quando:</b> a inizio turno, oppure quando il programma chiede di nuovo l'accesso.</div>
+  <ol class="passi">
+    <li>Apri il browser della postazione e vai all'indirizzo di EssentiaMES (di solito è già nei preferiti; altrimenti chiedilo al responsabile).</li>
+    <li>Scrivi il tuo <b>nome utente</b> e la tua <b>password</b>. “Ricordami su questo dispositivo” evita di rifare l'accesso ogni giorno: usalo solo se la postazione non è condivisa con altri.</li>
+    <li>Premi <span class="tasto">Accedi</span>. Si apre la lista delle attività della tua macchina.</li>
+  </ol>
+  <figure class="piccolo centro"><img src="img/op-01-login.jpg" alt=""><figcaption>Pagina di accesso.</figcaption></figure>
+  <div class="box nota"><span class="t">Se c'è un'attività in corso</span>Se avevi lasciato un'attività avviata, dopo l'accesso EssentiaMES apre direttamente la schermata “Attività in corso”. Il tempo ha continuato a scorrere anche a programma chiuso.</div>
+  <h3>“Nessuna macchina associata”</h3>
+  <p>Il tuo utente non è ancora collegato a una macchina. Non puoi lavorare finché il responsabile non fa l'associazione (Dashboard Macchina).</p>
+  <figure class="medio centro"><img src="img/op-18-nessuna-macchina.jpg" alt=""></figure>
+</section>
+
+<!-- 3 -->
+<section class="proc">
+  <h2><span class="num">3</span>La lista delle attività</h2>
+  <div class="quando"><b>Cosa vedi:</b> “Selezione attività” elenca le fasi da fare sulla tua macchina, dalla più vecchia alla più recente. La pagina si aggiorna da sola ogni pochi secondi: i nuovi ordini compaiono senza ricaricare.</div>
+  <figure><img src="img/op-02-lista.jpg" alt=""><figcaption>In alto il tuo utente e la tua macchina; sotto, una scheda per ogni attività.</figcaption></figure>
+  <table>
+    <tr><th style="width:45mm">Nella scheda</th><th>Significato</th></tr>
+    <tr><td>Attività</td><td>Nome della fase (es. “Tornitura G8-1250”).</td></tr>
+    <tr><td>Articolo</td><td>Codice del pezzo da lavorare.</td></tr>
+    <tr><td>Data inserimento</td><td>Quando l'attività è arrivata sulla tua macchina.</td></tr>
+    <tr><td>Numero grande</td><td>Quantità da produrre in questa fase.</td></tr>
+    <tr><td>Allegati / note</td><td>Documenti e note della macchina (vedi capitolo 5).</td></tr>
+    <tr><td>Freccia</td><td>Tocca la scheda per aprirla e avviare l'attività.</td></tr>
+    <tr><td><span class="tasto bianco">Nascondi</span></td><td>Toglie dalla lista un'attività che non ti serve (vedi capitolo 10).</td></tr>
+  </table>
+</section>
+
+<!-- 4 -->
+<section class="proc">
+  <h2><span class="num">4</span>Avviare un'attività</h2>
+  <div class="quando"><b>Quando:</b> nel momento in cui inizi a preparare la macchina (attrezzaggio) o a produrre (lavorazione).</div>
+  <ol class="passi">
+    <li>Nella lista tocca la scheda dell'attività. Si apre la finestra <b>Apri Attività</b>.</li>
+    <li>Controlla <b>articolo</b> e <b>quantità da produrre</b>.</li>
+    <li>Nel campo <b>Attività</b> scegli:
+      <ul class="semplice" style="margin-top:1mm">
+        <li><b>Attrezzaggio</b>: devi ancora preparare la macchina (montaggio attrezzature, azzeramento utensili, caricamento programma, primo pezzo);</li>
+        <li><b>Lavorazione</b>: la macchina è già pronta e inizi subito a produrre.</li>
+      </ul></li>
+    <li>Premi <span class="tasto">Avvia Attività</span>. Si apre la schermata “Attività in corso” e parte il tempo.</li>
+  </ol>
+  <figure class="medio centro"><img src="img/op-03-avvio.jpg" alt=""><figcaption>Finestra “Apri Attività”: qui scegli Attrezzaggio o Lavorazione.</figcaption></figure>
+  <div class="box attenzione"><span class="t">Una sola attività alla volta</span>Se sulla macchina c'è già un'attività avviata, compare il messaggio “Sulla macchina è già in corso l'attività …”. Prima sospendi o concludi quella.</div>
+</section>
+
+<!-- 5 -->
+<section class="proc">
+  <h2><span class="num">5</span>Note e documenti della macchina</h2>
+  <div class="quando"><b>A cosa servono:</b> disegni, istruzioni di attrezzaggio, schede di controllo e comunicazioni tra turni legate alla macchina. Le vedono tutti quelli che lavorano su quella macchina e il responsabile.</div>
+  <div class="due">
+    <figure><img src="img/op-04-note.jpg" alt=""><figcaption>Scheda “Note”: testo, data e autore.</figcaption></figure>
+    <figure><img src="img/op-05-documenti.jpg" alt=""><figcaption>Scheda “Documenti”: tocca il nome del file per aprirlo.</figcaption></figure>
+  </div>
+  <h3>Consultare</h3>
+  <ol class="passi">
+    <li>Tocca la scheda dell'attività per aprire la finestra “Apri Attività”.</li>
+    <li>Passa alla scheda <b>Note</b> o <b>Documenti</b> (il numero rosso indica quante ce ne sono).</li>
+    <li>Torna su <b>Dettagli</b> per avviare l'attività.</li>
+  </ol>
+  <h3>Aggiungere una nota o un documento</h3>
+  <ol class="passi">
+    <li>Nella scheda <b>Dettagli</b> premi <span class="tasto">Inserisci note</span> oppure <span class="tasto">Inserisci documenti</span>.</li>
+    <li>Scrivi il testo della nota, oppure scegli il file (foto, PDF, disegno) e conferma.</li>
+  </ol>
+  <div class="box consiglio"><span class="t">Buone abitudini</span>Scrivi note brevi e utili a chi viene dopo, ad esempio “Utensile T12 sostituito”, “Refrigerante da rabboccare” o “Pezzo 23 da ricontrollare in quota 12,5”. La <b>X rossa</b> elimina una nota o un documento: usala solo per le tue note non più valide.</div>
+</section>
+
+<!-- 6 -->
+<section class="proc">
+  <h2><span class="num">6</span>Attività in corso</h2>
+  <div class="quando"><b>Cosa vedi:</b> lo stato (<b>In Attrezzaggio</b> o <b>In Lavorazione</b>, con il pallino rosso lampeggiante), l'attività, l'articolo, l'obiettivo e il tempo trascorso.</div>
+  <figure class="medio centro"><img src="img/op-06-attrezzaggio.jpg" alt=""><figcaption>Attività in attrezzaggio: in basso i pulsanti per sospendere o concludere.</figcaption></figure>
+  <ul class="semplice">
+    <li><span class="tasto rosso">Sospendi attività</span>: ti fermi ma la fase non è finita (capitolo 8).</li>
+    <li><span class="tasto">Concludi attività</span>: hai finito l'attrezzaggio (capitolo 7) oppure la lavorazione (capitolo 9).</li>
+  </ul>
+  <div class="box nota"><span class="t">Puoi chiudere il browser</span>Il tempo viene registrato sul server: se chiudi la pagina, spegni lo schermo o cambi postazione non si perde nulla. Al prossimo accesso torni a questa schermata.</div>
+</section>
+
+<!-- 7 -->
+<section class="proc">
+  <h2><span class="num">7</span>Finire l'attrezzaggio</h2>
+  <div class="quando"><b>Quando:</b> la macchina è pronta e inizi la produzione.</div>
+  <ol class="passi">
+    <li>Nella schermata “Attività in corso” (In Attrezzaggio) premi <span class="tasto">Concludi attività</span>.</li>
+    <li>Se durante l'attrezzaggio hai fatto pezzi di prova, indica quelli buoni in <b>Q.tà Prodotta</b> e quelli da scartare in <b>Q.tà scartata</b>. Altrimenti lascia 0.</li>
+    <li>Premi <span class="tasto">Salva</span>. L'attività passa da sola <b>In Lavorazione</b> e il tempo riparte da zero, come lavorazione.</li>
+  </ol>
+  <div class="due">
+    <figure><img src="img/op-07-fine-attrezzaggio.jpg" alt=""><figcaption>Fine attrezzaggio: quantità dei pezzi di prova.</figcaption></figure>
+    <figure><img src="img/op-08-lavorazione.jpg" alt=""><figcaption>Subito dopo: la stessa attività in lavorazione.</figcaption></figure>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="proc">
+  <h2><span class="num">8</span>Sospendere e riprendere</h2>
+  <div class="quando"><b>Quando sospendere:</b> fine turno, pausa lunga, guasto della macchina, attesa di materiale o di un controllo qualità, cambio urgente su un altro lavoro. Il tempo smette di essere conteggiato.</div>
+  <h3>Sospendere</h3>
+  <ol class="passi">
+    <li>Nella schermata “Attività in corso” premi <span class="tasto rosso">Sospendi attività</span>.</li>
+    <li>Inserisci le quantità <b>totali fatte finora</b> in questa fase: pezzi buoni in <b>Q.tà Prodotta</b>, scarti in <b>Q.tà scartata</b>.</li>
+    <li>Premi <span class="tasto">Salva</span>. Torni alla lista: l'attività ha la scritta “(Attività precedentemente aperta)”.</li>
+  </ol>
+  <div class="due">
+    <figure><img src="img/op-09-sospendi.jpg" alt=""><figcaption>Sospensione: quantità fatte fino a questo momento.</figcaption></figure>
+    <figure><img src="img/op-10-lista-sospesa.jpg" alt=""><figcaption>In lista l'attività sospesa è segnalata in giallo.</figcaption></figure>
+  </div>
+  <h3>Riprendere</h3>
+  <ol class="passi">
+    <li>Tocca la scheda dell'attività sospesa. La finestra mostra le quantità registrate prima.</li>
+    <li>Scegli <b>Lavorazione</b> (oppure <b>Attrezzaggio</b>, se devi preparare di nuovo la macchina) e premi <span class="tasto">Avvia Attività</span>.</li>
+  </ol>
+  <figure class="medio centro"><img src="img/op-11-riprendi.jpg" alt=""><figcaption>Ripresa di un'attività sospesa: in basso le quantità già registrate.</figcaption></figure>
+</section>
+
+<!-- 9 -->
+<section class="proc">
+  <h2><span class="num">9</span>Concludere la lavorazione</h2>
+  <div class="quando"><b>Quando:</b> hai finito i pezzi della fase, oppure devi chiudere con una quantità parziale.</div>
+  <ol class="passi">
+    <li>Nella schermata “Attività in corso” (In Lavorazione) premi <span class="tasto">Concludi attività</span>.</li>
+    <li>Il campo <b>Q.tà Prodotta</b> contiene già quanto registrato in precedenza: scrivi il <b>totale dei pezzi buoni</b> della fase, comprese le quantità precedenti.</li>
+    <li>In <b>Q.tà scartata</b> scrivi il <b>totale degli scarti</b>.</li>
+    <li>Premi <span class="tasto">Salva</span>.</li>
+  </ol>
+  <figure class="medio centro"><img src="img/op-12-concludi.jpg" alt=""><figcaption>Chiusura: totale pezzi buoni e totale scarti della fase.</figcaption></figure>
+  <h3>Cosa succede dopo il salvataggio</h3>
+  <table>
+    <tr><th style="width:55mm">Caso</th><th>Risultato</th></tr>
+    <tr><td><b>Q.tà Prodotta uguale o superiore</b> alla quantità da produrre</td><td>La fase è <b>completata</b> ed esce dalla tua lista. I pezzi vengono versati nel magazzino della fase successiva e la fase successiva si sblocca sulla sua macchina (ad esempio la fresatura dopo la tornitura).</td></tr>
+    <tr><td><b>Q.tà Prodotta inferiore</b> alla quantità da produrre</td><td>Viene registrata una <b>quantità parziale</b> (es. “20/50”) e l'attività resta nella tua lista per essere completata più avanti.</td></tr>
+  </table>
+  <figure class="medio centro"><img src="img/op-13-lista-dopo.jpg" alt=""><figcaption>Dopo la chiusura completa l'attività non è più in lista.</figcaption></figure>
+  <div class="box attenzione"><span class="t">Controlla i numeri prima di salvare</span>Con la chiusura completa i pezzi vengono spostati di magazzino e la fase successiva parte. Se hai sbagliato, avvisa subito il responsabile.</div>
+</section>
+
+<!-- 10 -->
+<section class="proc">
+  <h2><span class="num">10</span>Nascondere le attività inutili</h2>
+  <div class="quando"><b>Quando:</b> nella lista c'è un'attività che sulla tua macchina non serve (ad esempio una fase che per quell'articolo non si fa) e ti dà fastidio vederla ogni volta.</div>
+  <ol class="passi">
+    <li>Nella lista premi <span class="tasto bianco">Nascondi</span> a destra dell'attività. L'attività sparisce dalla lista.</li>
+    <li>In alto compare “<b>N attività nascoste</b>”. Premi <span class="tasto bianco">Mostra</span> per rivederle: sono in grigio con l'etichetta “Nascosta dall'operatore”.</li>
+    <li>Per rimetterne una in lista premi <span class="tasto bianco">Ripristina</span> accanto all'attività.</li>
+  </ol>
+  <div class="due">
+    <figure><img src="img/op-14-nascosta.jpg" alt=""><figcaption>Un'attività nascosta: in alto il contatore e il pulsante Mostra.</figcaption></figure>
+    <figure><img src="img/op-15-mostra-nascoste.jpg" alt=""><figcaption>Con “Mostra” le nascoste ricompaiono in grigio, con il pulsante Ripristina.</figcaption></figure>
+  </div>
+  <div class="box attenzione"><span class="t">Nascondere non chiude la fase</span>Per il sistema l'attività resta da fare e il responsabile la vede nella scheda della macchina come “Nascosta dall'operatore”. Se la fase non va fatta davvero, <b>avvisa il responsabile</b>, che può correggere il ciclo di lavoro. Se avvii un'attività nascosta, torna visibile.</div>
+</section>
+
+<!-- 11 -->
+<section class="proc">
+  <h2><span class="num">11</span>Account: password e uscita</h2>
+  <div class="quando"><b>Dove:</b> icona con l'omino in basso a destra.</div>
+  <div class="due">
+    <div>
+      <ul class="semplice">
+        <li><b>Procedure operatore (PDF)</b> e <b>Scheda rapida operatore (PDF)</b>: aprono questi documenti.</li>
+        <li><b>Cambia Password</b>: inserisci la password attuale e due volte quella nuova, poi premi “Cambia password”. Al primo accesso cambia la password ricevuta dal responsabile.</li>
+        <li><b>Logout</b>: esci da EssentiaMES. Fallo sempre a fine turno se la postazione è usata da più persone.</li>
+      </ul>
+      <div class="box consiglio"><span class="t">La password</span>Scegli una password che solo tu conosci e non scriverla sulla macchina. Se la dimentichi, il responsabile può assegnartene una nuova.</div>
+    </div>
+    <figure><img src="img/op-16-account.jpg" alt=""><figcaption>Pagina Account.</figcaption></figure>
+  </div>
+  <figure class="medio centro"><img src="img/op-17-password.jpg" alt=""><figcaption>Cambio password.</figcaption></figure>
+</section>
+
+<!-- 12 -->
+<section class="proc">
+  <h2><span class="num">12</span>Problemi frequenti</h2>
+  <table>
+    <tr><th style="width:62mm">Problema</th><th>Cosa fare</th></tr>
+    <tr><td>“Nessuna macchina associata”</td><td>Chiedi al responsabile di associare il tuo utente alla macchina.</td></tr>
+    <tr><td>L'attività che devi fare non è in lista</td><td>Premi <b>Mostra</b> in alto, se ci sono attività nascoste. Altrimenti la fase precedente non è ancora conclusa (attività bloccata), oppure l'ordine non è ancora stato creato: chiedi al responsabile.</td></tr>
+    <tr><td>“Sulla macchina è già in corso l'attività …”</td><td>Sulla macchina c'è un'altra attività avviata: aprila (pulsante Home in basso a sinistra), poi sospendila o concludila.</td></tr>
+    <tr><td>Ho avviato l'attività sbagliata</td><td>Premi subito <b>Sospendi attività</b> lasciando le quantità come sono, poi avvia quella giusta. Avvisa il responsabile se è passato molto tempo.</td></tr>
+    <tr><td>Ho salvato quantità sbagliate</td><td>Avvisa subito il responsabile indicando ordine, fase e quantità giuste. Non compensare con la registrazione successiva.</td></tr>
+    <tr><td>Ho dimenticato di sospendere a fine turno</td><td>Sospendi appena te ne accorgi e avvisa il responsabile: il tempo registrato su quella macchina sarà più lungo del reale.</td></tr>
+    <tr><td>“Sessione scaduta” o ritorno alla pagina di accesso</td><td>Rifai l'accesso. Le attività avviate restano come le avevi lasciate.</td></tr>
+    <tr><td>“Server non raggiungibile” oppure la pagina non si carica</td><td>Controlla che la postazione sia collegata alla rete e ricarica la pagina (tasto F5). Se il problema resta, avvisa il responsabile o l'informatico.</td></tr>
+    <tr><td>Un documento non si apre</td><td>La postazione potrebbe non avere il programma per quel tipo di file: chiedi al responsabile di caricarlo anche in PDF.</td></tr>
+  </table>
+</section>
+
+</body>
+</html>

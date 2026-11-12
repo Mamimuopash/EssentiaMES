@@ -7,3 +7,5 @@
 *.cmd text eol=crlf
 *.exe binary
 *.msi binary
+*.pdf binary
+*.jpg binary

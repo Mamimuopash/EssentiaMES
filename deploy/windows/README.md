@@ -356,6 +356,7 @@ Finché lo schema non è aggiornato l'app funziona, ma il pulsante "Nascondi" av
 | **Mail giornaliera ODP** | Automazioni → Email automatiche (`mail_odp.*`) | ODP creati e lavorati nella giornata, con avanzamento e ore. Interruttore spento di default; destinatari separati da virgola; ora predefinita 20:30 |
 | **Mail settimanale uso macchine** | Automazioni → Email automatiche (`mail_uso_macchine.*`) | Ore di attrezzaggio e lavorazione registrate su EssentiaMES da ogni macchina negli ultimi 7 giorni, % su un turno di 8 ore, macchine mai usate in rosso. Predefinito venerdì 20:30 |
 | Anteprima e invio di prova | Automazioni → "Email automatiche: anteprima e invio di prova" | l'anteprima non invia nulla |
+| **Sincronizzazione Mexal serale** | Automazioni → Pianificazione (`scheduler.ora_sync_giornaliera`) | predefinita 20:00, prima del controllo scorte. Sui database già installati il valore salvato resta: impostarlo a mano |
 | **Controllo scorte serale** | Automazioni → Pianificazione (`scheduler.orari_ordini`) | orari fissi, es. `20:30` oppure `20:00,21:00`; vuoto = ogni N minuti come prima |
 | **G8A esclusi dai riordini** | Automazioni → Ordini automatici (`ordini_automatici.prefissi_esclusi`) | predefinito `G8A`; svuotare il campo per includerli di nuovo |
 | **Nascondere attività inutili** | Postazione operatore, pulsante "Nascondi" accanto a ogni attività | la fase resta com'è e l'operatore può rivederla con "Mostra". Se viene avviata torna visibile. La scheda macchina mostra le nascoste con un'etichetta |
@@ -474,12 +475,15 @@ versione precedente.** Configurazione, documenti e log non vengono toccati.
 - `C:\EssentiaMES\data` (documenti allegati);
 - `C:\EssentiaMES\config\essentia.env`.
 
-**Backup e pulizia delle attività precedenti:** `database\pulizia-attivita.sql` (da SSMS, account
-amministratore, connessi al database di EssentiaMES). Con `@Esegui = 0` mostra solo quanti ODP
-toglierebbe (ultima modifica prima di `@DataLimite`; con `@SoloConclusi = 1` solo quelli conclusi).
-Con `@Esegui = 1` fa prima un backup completo verificato (`COPY_ONLY`), copia attività e tempi
-nelle tabelle `Archivio_Brighetti_*` e poi li cancella. Gli ODP in attrezzaggio o lavorazione non vengono mai
-toccati.
+**Backup e cancellazione delle attività:** `database\pulizia-attivita.sql` (da SSMS, account
+amministratore, connessi al database di EssentiaMES, a produzione ferma). Così com'è, F5 fa un
+backup completo verificato (`COPY_ONLY`), copia **tutte** le attività e i tempi nelle tabelle
+`Archivio_Brighetti_*` e poi li cancella; articoli, cicli, giacenze e lotti restano. Con `@Esegui = 0`
+fa solo una prova; con `@Tutte = 0` toglie solo gli ODP più vecchi di `@DataLimite`.
+
+**Manuali in PDF:** `public\manuali\` (procedure operatore, scheda rapida, procedure responsabile),
+apribili da EssentiaMES nella pagina Account. Si rigenerano con `node docs\procedure\genera-pdf.mjs`
+dopo aver modificato i testi in `docs\procedure\*.html`.
 
 **Disinstallare:** `C:\EssentiaMES\strumenti\DISINSTALLA.cmd`
 (`-RimuoviIIS` per il sito IIS, `-RimuoviTutto` anche per configurazione e documenti).

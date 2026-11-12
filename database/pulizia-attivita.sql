@@ -1,30 +1,28 @@
 /* ============================================================================
-   EssentiaMES - Backup e pulizia delle attivita' (ODP) precedenti
+   EssentiaMES - Backup e cancellazione delle attivita' (ODP)
    ----------------------------------------------------------------------------
    Da eseguire in SSMS, CONNESSI AL DATABASE DI ESSENTIAMES (es. Brighetti), con
    un account amministratore (serve il permesso di BACKUP).
 
-   COME SI USA
-     1. Impostare i parametri qui sotto e lasciare @Esegui = 0: lo script fa
-        solo una PROVA e mostra quanti ODP / attivita' / tempi verrebbero tolti
-        (con l'elenco dei primi 200 ODP). Non modifica nulla.
-     2. Controllati i numeri, impostare @Esegui = 1 ed eseguire di nuovo:
-          a) backup COMPLETO del database (COPY_ONLY: non disturba i backup
-             gia' pianificati) verificato con RESTORE VERIFYONLY;
-          b) copia delle attivita' e dei loro tempi nelle tabelle di archivio
-             dbo.Archivio_Brighetti_Attivita e dbo.Archivio_Brighetti_Tempi;
-          c) cancellazione da Brighetti_Attività e Brighetti_Tempi.
-        Se il backup non riesce lo script si ferma senza cancellare nulla.
+   COSI' COM'E' (@Tutte = 1, @Esegui = 1) premendo F5 lo script:
+     a) fa il backup COMPLETO del database e lo verifica (RESTORE VERIFYONLY).
+        Il backup e' COPY_ONLY, quindi non disturba quelli gia' pianificati;
+     b) copia TUTTE le attivita' e TUTTI i tempi nelle tabelle di archivio
+        dbo.Archivio_Brighetti_Attivita e dbo.Archivio_Brighetti_Tempi;
+     c) cancella tutte le attivita' (Brighetti_Attività) e i tempi (Brighetti_Tempi).
+   Se il backup non riesce, lo script si ferma senza cancellare nulla.
+   Lanciarlo a produzione ferma: anche le attivita' in corso vengono tolte e
+   gli operatori ripartono da una lista vuota.
 
-   COSA VIENE TOLTO
-     ODP interi (tutte le fasi), mai fasi singole: la produzione passa da una
-     fase alla successiva dello stesso ODP. Un ODP viene tolto se la sua ultima
-     modifica e' precedente a @DataLimite e:
-       - con @SoloConclusi = 1 (consigliato) se tutte le fasi sono completate o annullate;
-       - con @SoloConclusi = 0 anche se ha fasi ancora da fare (ripartenza pulita).
-     Gli ODP con una fase IN ATTREZZAGGIO o IN LAVORAZIONE non vengono MAI tolti.
-     Restano invariati: articoli, cicli (procedure), giacenze, lotti, macchine,
-     magazzini, note e documenti.
+   Restano invariati: articoli, cicli (procedure), giacenze, lotti, macchine,
+   magazzini, utenti, impostazioni, note e documenti.
+
+   ALTRI USI
+     @Esegui = 0          solo PROVA: mostra cosa verrebbe tolto, non modifica nulla.
+     @Tutte  = 0          toglie solo gli ODP interi con ultima modifica prima di
+                          @DataLimite (con @SoloConclusi = 1 solo quelli con tutte le
+                          fasi completate/annullate). In questo caso gli ODP con
+                          una fase in attrezzaggio o in lavorazione non vengono mai tolti.
 
    RIPRISTINO
      Tutto: ripristinare il file .bak indicato nel messaggio finale.
@@ -35,10 +33,17 @@
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-DECLARE @DataLimite   DATETIME      = '20261101';  -- ODP con ultima modifica PRIMA di questa data (formato AAAAMMGG)
-DECLARE @SoloConclusi BIT           = 1;           -- 1 = solo ODP conclusi; 0 = anche ODP con fasi ancora da fare
-DECLARE @Esegui       BIT           = 0;           -- 0 = PROVA (solo conteggi); 1 = backup + archivio + cancellazione
+DECLARE @Tutte        BIT           = 1;           -- 1 = TUTTE le attivita'; 0 = solo quelle scelte con i due parametri seguenti
+DECLARE @DataLimite   DATETIME      = '20261101';  -- (solo con @Tutte = 0) ODP con ultima modifica PRIMA di questa data (AAAAMMGG)
+DECLARE @SoloConclusi BIT           = 1;           -- (solo con @Tutte = 0) 1 = solo ODP conclusi; 0 = anche ODP con fasi da fare
+DECLARE @Esegui       BIT           = 1;           -- 1 = backup + archivio + cancellazione; 0 = PROVA (solo conteggi)
 DECLARE @FileBackup   NVARCHAR(400) = NULL;        -- NULL = cartella di backup predefinita dell'istanza
+
+IF OBJECT_ID('dbo.Brighetti_Attività', 'U') IS NULL
+BEGIN
+    RAISERROR('Tabella Brighetti_Attività non trovata: selezionare in SSMS il database di EssentiaMES (es. Brighetti) e rieseguire.', 16, 1);
+    RETURN;
+END
 
 /* ------------------------------------------------------------ selezione ODP */
 IF OBJECT_ID('tempdb..#odp') IS NOT NULL DROP TABLE #odp;
@@ -51,22 +56,30 @@ SELECT ISNULL(a.OrdineDiProduzione, N'(senza ODP)') AS Odp,
   INTO #odp
   FROM dbo.[Brighetti_Attività] a
  GROUP BY ISNULL(a.OrdineDiProduzione, N'(senza ODP)')
-HAVING ISNULL(MAX(a.UltimaModifica_Data), '19000101') < @DataLimite
-   AND SUM(CASE WHEN a.[StatoAttività] IN (1, 2) THEN 1 ELSE 0 END) = 0          -- mai ODP in lavorazione
-   AND (@SoloConclusi = 0 OR SUM(CASE WHEN a.[StatoAttività] IN (4, 5) THEN 1 ELSE 0 END) = COUNT(*));
+HAVING @Tutte = 1
+    OR (ISNULL(MAX(a.UltimaModifica_Data), '19000101') < @DataLimite
+        AND SUM(CASE WHEN a.[StatoAttività] IN (1, 2) THEN 1 ELSE 0 END) = 0      -- mai ODP in lavorazione
+        AND (@SoloConclusi = 0 OR SUM(CASE WHEN a.[StatoAttività] IN (4, 5) THEN 1 ELSE 0 END) = COUNT(*)));
 
 DECLARE @nOdp INT, @nAttivita INT, @nAperti INT, @nTempi INT, @nTotale INT;
 SELECT @nOdp = COUNT(*), @nAttivita = ISNULL(SUM(Fasi), 0), @nAperti = ISNULL(SUM(CASE WHEN FasiChiuse < Fasi THEN 1 ELSE 0 END), 0) FROM #odp;
 SELECT @nTempi = COUNT(*)
   FROM dbo.Brighetti_Tempi t
-  JOIN dbo.[Brighetti_Attività] a ON a.[IdAttività] = t.[IdAttività]
-  JOIN #odp o ON o.Odp = ISNULL(a.OrdineDiProduzione, N'(senza ODP)');
+ WHERE @Tutte = 1
+    OR EXISTS (SELECT 1 FROM dbo.[Brighetti_Attività] a JOIN #odp o ON o.Odp = ISNULL(a.OrdineDiProduzione, N'(senza ODP)')
+                WHERE a.[IdAttività] = t.[IdAttività]);
 SELECT @nTotale = COUNT(*) FROM dbo.[Brighetti_Attività];
 
-PRINT CONCAT('Database: ', DB_NAME(), ' - limite: ', CONVERT(NVARCHAR(10), @DataLimite, 103),
-             ' - solo conclusi: ', CASE WHEN @SoloConclusi = 1 THEN 'si' ELSE 'no' END);
+IF @Tutte = 1
+    PRINT CONCAT('Database: ', DB_NAME(), ' - TUTTE le attivita''');
+ELSE
+    PRINT CONCAT('Database: ', DB_NAME(), ' - limite: ', CONVERT(NVARCHAR(10), @DataLimite, 103),
+                 ' - solo conclusi: ', CASE WHEN @SoloConclusi = 1 THEN 'si' ELSE 'no' END);
 PRINT CONCAT('ODP da togliere: ', @nOdp, ' (di cui con fasi ancora da fare: ', @nAperti, ')');
 PRINT CONCAT('Attivita'' da togliere: ', @nAttivita, ' su ', @nTotale, ' - tempi registrati: ', @nTempi);
+DECLARE @nInCorso INT = (SELECT COUNT(*) FROM dbo.[Brighetti_Attività] a JOIN #odp o ON o.Odp = ISNULL(a.OrdineDiProduzione, N'(senza ODP)')
+                          WHERE a.[StatoAttività] IN (1, 2));
+IF @nInCorso > 0 PRINT CONCAT('ATTENZIONE: ', @nInCorso, ' attivita'' risultano in attrezzaggio/lavorazione in questo momento e verranno tolte.');
 
 SELECT TOP (200) Odp, CodiceArticolo, Fasi, FasiChiuse, UltimaModifica FROM #odp ORDER BY UltimaModifica, Odp;
 
@@ -76,7 +89,7 @@ BEGIN
     RETURN;
 END
 
-IF @nOdp = 0
+IF @nOdp = 0 AND @nTempi = 0
 BEGIN
     PRINT 'Nessun ODP da togliere con questi parametri.';
     RETURN;
@@ -146,8 +159,9 @@ BEGIN TRANSACTION;
 INSERT INTO dbo.Archivio_Brighetti_Tempi ([IdTempo], [IdAttività], [TipoAttività], DataInizio, DataFine, Note, DataArchiviazione)
 SELECT t.[IdTempo], t.[IdAttività], t.[TipoAttività], t.DataInizio, t.DataFine, t.Note, @ora
   FROM dbo.Brighetti_Tempi t
-  JOIN dbo.[Brighetti_Attività] a ON a.[IdAttività] = t.[IdAttività]
-  JOIN #odp o ON o.Odp = ISNULL(a.OrdineDiProduzione, N'(senza ODP)');
+ WHERE @Tutte = 1
+    OR EXISTS (SELECT 1 FROM dbo.[Brighetti_Attività] a JOIN #odp o ON o.Odp = ISNULL(a.OrdineDiProduzione, N'(senza ODP)')
+                WHERE a.[IdAttività] = t.[IdAttività]);
 
 INSERT INTO dbo.Archivio_Brighetti_Attivita ([IdAttività], IncrementaleProcedura, CodiceArticolo, [NomeAttività], idReparto,
        [QuantitàProdotta], [QuantitàScartata], [StatoAttività], UltimaModifica_OperatoreID, UltimaModifica_Operatore,
@@ -160,8 +174,9 @@ SELECT a.[IdAttività], a.IncrementaleProcedura, a.CodiceArticolo, a.[NomeAttivi
 
 DELETE t
   FROM dbo.Brighetti_Tempi t
-  JOIN dbo.[Brighetti_Attività] a ON a.[IdAttività] = t.[IdAttività]
-  JOIN #odp o ON o.Odp = ISNULL(a.OrdineDiProduzione, N'(senza ODP)');
+ WHERE @Tutte = 1
+    OR EXISTS (SELECT 1 FROM dbo.[Brighetti_Attività] a JOIN #odp o ON o.Odp = ISNULL(a.OrdineDiProduzione, N'(senza ODP)')
+                WHERE a.[IdAttività] = t.[IdAttività]);
 DECLARE @tolteTempi INT = @@ROWCOUNT;
 
 DELETE a

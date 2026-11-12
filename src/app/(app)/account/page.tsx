@@ -26,6 +26,26 @@ export default async function AccountPage() {
       <div className="TextAccount">
         <p className="text-muted small">Ruolo: {user.roles.join(', ') || '-'}</p>
       </div>
+      <div className="text-center containerLogout">
+        <a className="btn btnCambioPassword" href="/manuali/procedure-operatore.pdf" target="_blank" rel="noreferrer">
+          <i className="fa-regular fa-file-pdf me-2" />
+          Procedure operatore (PDF)
+        </a>
+      </div>
+      <div className="text-center containerLogout">
+        <a className="btn btnCambioPassword" href="/manuali/scheda-rapida-operatore.pdf" target="_blank" rel="noreferrer">
+          <i className="fa-regular fa-file-pdf me-2" />
+          Scheda rapida operatore (PDF)
+        </a>
+      </div>
+      {user.isAdmin && (
+        <div className="text-center containerLogout">
+          <a className="btn btnCambioPassword" href="/manuali/procedure-responsabile.pdf" target="_blank" rel="noreferrer">
+            <i className="fa-regular fa-file-pdf me-2" />
+            Procedure responsabile (PDF)
+          </a>
+        </div>
+      )}
       {docs && (
         <div className="text-center containerLogout">
           <a className="btn btnLogOut" href={docs} target="_blank" rel="noreferrer">

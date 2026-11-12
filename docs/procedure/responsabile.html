@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>EssentiaMES - Procedure responsabile</title>
+<link rel="stylesheet" href="stile.css">
+</head>
+<body>
+
+<div class="copertina">
+  <img class="logo" src="../../public/assets/Logo.png" alt="">
+  <div class="tipo">EssentiaMES · Manuale operativo</div>
+  <h1>Procedure responsabile</h1>
+  <div class="sotto">Ufficio e responsabili di produzione: utenti e postazioni, articoli e cicli, ordini di produzione, avanzamento, conto lavoro, riordini, giacenze da Mexal ed email automatiche.</div>
+  <div class="meta">Versione {{DATA}} · Le procedure di chi lavora alle macchine sono in <b>Procedure operatore</b>. I PDF si aprono da EssentiaMES: icona <b>Account</b> in basso a destra.</div>
+</div>
+
+<div class="indice">
+  <h2>Indice</h2>
+  <ol>
+    <li><span class="n">1</span>Il menu<span class="d">dove si trovano le funzioni</span></li>
+    <li><span class="n">2</span>Creare un operatore<span class="d">utente, password, cancellazione</span></li>
+    <li><span class="n">3</span>Associare l'operatore alla macchina<span class="d">postazione di lavoro</span></li>
+    <li><span class="n">4</span>Articoli e cicli di lavoro<span class="d">cicli automatici e articoli senza affilatura</span></li>
+    <li><span class="n">5</span>Creare un ordine di produzione (ODP)<span class="d">dalla Dashboard Giacenza</span></li>
+    <li><span class="n">6</span>Seguire la produzione<span class="d">Centro di controllo, Storico, scheda macchina</span></li>
+    <li><span class="n">7</span>Conto lavoro e lotti<span class="d">invio e rientro dai terzisti</span></li>
+    <li><span class="n">8</span>Riordino automatico<span class="d">proposte, conferma, evasione, G8A</span></li>
+    <li><span class="n">9</span>Giacenze da Mexal<span class="d">sincronizzazione serale</span></li>
+    <li><span class="n">10</span>Email automatiche<span class="d">ODP del giorno e uso delle macchine</span></li>
+    <li><span class="n">11</span>La giornata tipo<span class="d">cosa controllare e cosa succede da solo</span></li>
+    <li><span class="n">12</span>Manutenzione<span class="d">backup e pulizia delle attività</span></li>
+  </ol>
+</div>
+
+<!-- 1 -->
+<section class="proc" style="page-break-before:auto">
+  <h2><span class="num">1</span>Il menu</h2>
+  <p>Gli amministratori vedono in basso una barra con sette icone. Le icone con più voci si aprono con un tocco.</p>
+  <figure><img src="img/ad-01-dashboard.jpg" alt=""><figcaption>Dashboard con la planimetria e i pin delle macchine. In basso la barra del menu.</figcaption></figure>
+  <table>
+    <tr><th style="width:42mm">Icona</th><th>Voci</th></tr>
+    <tr><td>Casa</td><td>Dashboard: planimetria e stato delle macchine.</td></tr>
+    <tr><td>Tachimetro</td><td>Centro di Controllo: produzione, scorte, attività ferme e lotti in un'unica pagina.</td></tr>
+    <tr><td>Carrello</td><td>Dashboard Articoli, Dashboard Magazzino, Dashboard Giacenza, Dashboard Lotti.</td></tr>
+    <tr><td>Fabbrica</td><td>Dashboard Reparti, Dashboard Macchina, Cicli di lavoro, Dashboard Utenti (storico ordini e gestione account).</td></tr>
+    <tr><td>Robot</td><td>Automazioni, Ordini Automatici, Sincronizzazione Mexal.</td></tr>
+    <tr><td>Omino</td><td>Account: password, uscita e questi manuali in PDF.</td></tr>
+  </table>
+</section>
+
+<!-- 2 -->
+<section class="proc">
+  <h2><span class="num">2</span>Creare un operatore</h2>
+  <div class="quando"><b>Quando:</b> arriva un nuovo operatore, oppure un operatore ha dimenticato la password.</div>
+  <ol class="passi">
+    <li>Menu <b>Fabbrica → Dashboard Utenti</b>, scheda <b>Gest. Account</b>.</li>
+    <li>Premi <span class="tasto">Crea Utente</span>. Inserisci il nome utente (es. <code>mario.rossi</code>), l'email se c'è e una password iniziale (almeno 6 caratteri, con maiuscola, minuscola, numero e simbolo).</li>
+    <li>Come <b>Ruolo</b> scegli <b>Operatore (postazione macchina)</b>. Premi <span class="tasto">Crea Utente</span>.</li>
+    <li>Associa l'operatore alla sua macchina (capitolo 3) e comunicagli utente e password iniziale. Al primo accesso la cambierà dalla pagina Account.</li>
+  </ol>
+  <div class="due">
+    <figure><img src="img/ad-02-utenti.jpg" alt=""><figcaption>Elenco utenti: il pulsante a destra apre la gestione dell'utente.</figcaption></figure>
+    <figure><img src="img/ad-03-crea-utente.jpg" alt=""><figcaption>Creazione di un operatore.</figcaption></figure>
+  </div>
+  <h3>Password dimenticata o utente da eliminare</h3>
+  <p>Nella scheda Gest. Account premi il pulsante a destra dell'utente. Con <b>Reimposta password</b> assegni una nuova password; con <b>Cancella utente</b> elimini l'utente, ma lo storico dei suoi ordini resta.</p>
+</section>
+
+<!-- 3 -->
+<section class="proc">
+  <h2><span class="num">3</span>Associare l'operatore alla macchina</h2>
+  <div class="quando"><b>Perché:</b> l'operatore vede solo le attività della macchina a cui è associato. Senza associazione riceve il messaggio “Nessuna macchina associata”.</div>
+  <ol class="passi">
+    <li>Menu <b>Fabbrica → Dashboard Macchina</b>.</li>
+    <li>Sulla riga della macchina premi l'icona <b>Modifica</b> (matita).</li>
+    <li>In <b>Utente (operatore della postazione)</b> scegli l'operatore, poi premi <span class="tasto">Salva</span>.</li>
+  </ol>
+  <figure class="medio centro"><img src="img/ad-04-macchina-operatore.jpg" alt=""><figcaption>Modifica macchina: campo “Utente (operatore della postazione)”.</figcaption></figure>
+  <div class="box nota"><span class="t">Cambio turno o cambio macchina</span>Ogni macchina ha un utente di postazione. Se più persone lavorano sulla stessa macchina in turni diversi, si può usare un utente di postazione condiviso. In quel caso tempi e quantità restano registrati sulla macchina, senza distinzione di persona.</div>
+</section>
+
+<!-- 4 -->
+<section class="proc">
+  <h2><span class="num">4</span>Articoli e cicli di lavoro</h2>
+  <div class="quando"><b>Ciclo di lavoro</b> = la sequenza di fasi che un articolo attraversa: lavorazioni sulle macchine alternate a versamenti nei magazzini intermedi. Ogni ODP copia il ciclo dell'articolo.</div>
+  <h3>Nuovo articolo</h3>
+  <ol class="passi">
+    <li>Menu <b>Carrello → Dashboard Articoli</b>, pulsante <span class="tasto">Crea Articolo</span>.</li>
+    <li>Compila codice, descrizione, importanza, famiglia e lotto minimo, poi premi <span class="tasto">Salva</span>.</li>
+    <li>Per i codici che iniziano con G, GT, GP, PCM, SG… o che contengono B, il <b>ciclo standard viene creato in automatico</b>. Il messaggio di conferma indica quante fasi sono state create.</li>
+  </ol>
+  <figure class="piccolo centro"><img src="img/ad-13-nuovo-articolo.jpg" alt=""></figure>
+  <div class="box attenzione"><span class="t">Articoli che NON vanno in affilatura</span>Se il codice o la descrizione contengono <b>HDRED, TIN, WONDER, WOND, ZIRI</b> o <b>INOX</b>, il ciclo viene creato <b>senza affilatura</b>: l'ultimo versamento va direttamente al magazzino Finito. L'elenco delle parole si cambia in <b>Automazioni → Cicli di lavoro</b>.</div>
+  <h3>Vedere e correggere un ciclo</h3>
+  <p>Menu <b>Fabbrica → Cicli di lavoro</b>: scrivi il codice esatto e premi <b>Filtra</b>. Con le icone puoi modificare o eliminare una fase; con <b>Nuova fase</b> la aggiungi. Le modifiche valgono per i nuovi ODP, non per quelli già creati.</p>
+  <figure><img src="img/ad-14-ciclo-senza-affilatura.jpg" alt=""><figcaption>Ciclo di un articolo “TiN”: 8 fasi, senza affilatura.</figcaption></figure>
+  <table>
+    <tr><th style="width:52mm">Pulsante</th><th>Cosa fa</th></tr>
+    <tr><td>Genera cicli mancanti</td><td>Crea il ciclo per tutti gli articoli che non ne hanno uno: ciclo G o B in base al codice, altrimenti quello generico. Gli articoli con le parole chiave restano senza affilatura. Prima mostra quanti cicli verranno creati e chiede conferma.</td></tr>
+    <tr><td>Togli affilatura (HDRED, TIN…)</td><td>Mostra gli articoli con le parole chiave che hanno ancora l'affilatura nel ciclo. Con la conferma toglie l'affilatura e il versamento che la precede, poi rinumera le fasi. Salta gli articoli con ODP aperti: si può ripetere quando sono chiusi.</td></tr>
+  </table>
+</section>
+
+<!-- 5 -->
+<section class="proc">
+  <h2><span class="num">5</span>Creare un ordine di produzione (ODP)</h2>
+  <div class="quando"><b>Quando:</b> bisogna produrre un articolo. L'ODP crea tutte le fasi del ciclo; la prima compare subito nella lista della sua macchina, le altre si sbloccano una dopo l'altra man mano che gli operatori chiudono le fasi.</div>
+  <ol class="passi">
+    <li>Menu <b>Carrello → Dashboard Giacenza</b>.</li>
+    <li>Premi <span class="tasto bianco">+ Crea ODP</span> in alto, oppure l'icona <b>Crea ODP</b> sulla riga dell'articolo.</li>
+    <li>Scegli il <b>Codice Articolo</b>, inserisci la <b>Quantità da produrre</b> e premi <span class="tasto">Crea ODP</span>.</li>
+  </ol>
+  <figure><img src="img/ad-05-giacenze.jpg" alt=""><figcaption>Dashboard Giacenza: in rosso le giacenze sotto la scorta minima.</figcaption></figure>
+  <figure class="piccolo centro"><img src="img/ad-06-crea-odp.jpg" alt=""><figcaption>Creazione manuale di un ODP.</figcaption></figure>
+  <div class="box nota"><span class="t">Numero dell'ODP</span>L'ODP ha il formato <code>gg/mm/aaaa_N</code>: data di creazione e numero della prima fase del ciclo. Lo trovi nello Storico, nel Centro di controllo e nella mail serale degli ODP.</div>
+  <div class="box attenzione"><span class="t">Serve il ciclo</span>Se l'articolo non ha un ciclo di lavoro, l'ODP non viene creato: compare il messaggio “Nessun ciclo di lavoro definito”. Crealo prima (capitolo 4).</div>
+</section>
+
+<!-- 6 -->
+<section class="proc">
+  <h2><span class="num">6</span>Seguire la produzione</h2>
+  <h3>Centro di Controllo (menu Tachimetro)</h3>
+  <p>Riquadri con i numeri della giornata: articoli sotto scorta senza ordine, ODP fermi, proposte di riordino da valutare, attività sospese, ordini in arrivo, lotti non rientrati, fasi in attesa. Sotto ci sono il <b>flusso di produzione</b> per reparto e gli elenchi delle cose da seguire.</p>
+  <figure class="piccolo centro"><img src="img/ad-09-cruscotto.jpg" alt=""></figure>
+  <h3>Storico e dettaglio ODP (Fabbrica → Dashboard Utenti)</h3>
+  <p>La scheda <b>Storico Attività</b> elenca gli ODP con attività aggiornate negli ultimi 7 giorni. Il pulsante a destra apre il dettaglio: fase per fase, stato, quantità prodotte e scartate, tempi di lavorazione e di attrezzaggio, note, allegati e percentuale di completamento.</p>
+  <div class="due">
+    <figure><img src="img/ad-07-storico.jpg" alt=""></figure>
+    <figure><img src="img/ad-08-dettaglio-odp.jpg" alt=""></figure>
+  </div>
+  <h3>Scheda della macchina</h3>
+  <p>Si apre toccando il nome della macchina in <b>Fabbrica → Dashboard Macchina</b>, oppure il pin nella planimetria della Dashboard. Mostra note, documenti e attività in attesa della macchina. Le attività che l'operatore ha nascosto compaiono con l'etichetta <b>Nascosta dall'operatore</b>. Se una fase davvero non va fatta, correggi il ciclo dell'articolo invece di lasciarla nascosta.</p>
+</section>
+
+<!-- 7 -->
+<section class="proc">
+  <h2><span class="num">7</span>Conto lavoro e lotti</h2>
+  <div class="quando"><b>A cosa servono:</b> seguire il materiale che esce verso un terzista (es. trattamento termico) e rientra. Il lotto raccoglie gli articoli, le quantità, il fornitore e il documento ADL/ACL.</div>
+  <ol class="passi">
+    <li>Menu <b>Carrello → Dashboard Lotti</b>. Un lotto si crea con <span class="tasto">Crea Lotto</span>, oppure in automatico alla chiusura di una fase, se l'automatismo è attivo in Automazioni.</li>
+    <li>Con l'icona <b>Modifica</b>, nella scheda <b>Anagrafica</b> imposti fornitore, ADL/ACL e <b>Stato Lotto</b>; nella scheda <b>Articoli</b> gli articoli e le quantità.</li>
+    <li>Aggiorna lo stato quando il materiale si muove: <b>In Attesa</b> → <b>Inviato</b> (partito dal terzista) → <b>Ritornato da C/O</b> (rientrato).</li>
+    <li>Con l'icona Excel scarichi il documento del lotto da allegare alla spedizione.</li>
+  </ol>
+  <div class="due">
+    <figure><img src="img/ad-11-lotti.jpg" alt=""><figcaption>Dashboard Lotti.</figcaption></figure>
+    <figure><img src="img/ad-12-lotto-stato.jpg" alt=""><figcaption>Modifica del lotto: stato e fornitore.</figcaption></figure>
+  </div>
+  <div class="box consiglio"><span class="t">Rientro del materiale</span>Se in Automazioni è attivo “sblocca la fase successiva”, quando il lotto passa a <b>Ritornato da C/O</b> la fase successiva degli articoli del lotto si sblocca da sola e compare nella lista della macchina. Se l'articolo ha più ordini bloccati non viene sbloccato nulla, per evitare errori: in quel caso la riga resta nel Log.</div>
+</section>
+
+<!-- 8 -->
+<section class="proc">
+  <h2><span class="num">8</span>Riordino automatico</h2>
+  <div class="quando"><b>Come funziona:</b> ogni sera alle <b>20:30</b> EssentiaMES controlla le giacenze. Per gli articoli con giacenza + quantità in arrivo uguale o inferiore alla scorta minima crea una <b>proposta di riordino</b>, fino alla scorta massima (o al doppio della minima) e arrotondata al lotto minimo. Non ordina nulla da solo.</div>
+  <ol class="passi">
+    <li>Al mattino apri <b>Robot → Ordini Automatici</b>.</li>
+    <li>Per ogni proposta premi <b>Conferma</b> se va ordinata, oppure <b>Annulla</b> se non serve. L'ordine vero e proprio si fa come sempre (Mexal, fornitore, produzione interna).</li>
+    <li>Quando il materiale arriva premi <b>Segna evaso</b>. Finché una proposta è aperta, per quell'articolo non ne vengono create altre.</li>
+  </ol>
+  <figure><img src="img/ad-10-ordini-automatici.jpg" alt=""></figure>
+  <figure class="medio centro"><img src="img/ad-16c-ordini-automatici.jpg" alt=""><figcaption>Automazioni → Ordini Automatici: interruttore, prefissi inclusi (G8) ed esclusi (G8A).</figcaption></figure>
+  <div class="box nota"><span class="t">G8A esclusi</span>Gli articoli con codice che inizia per <b>G8A</b> non generano proposte (“Prefissi esclusi”). Per includerli di nuovo svuota il campo e premi <b>Salva parametri</b>. “Genera proposte ora” lancia il controllo subito.</div>
+</section>
+
+<!-- 9 -->
+<section class="proc">
+  <h2><span class="num">9</span>Giacenze da Mexal</h2>
+  <div class="quando"><b>Come funziona:</b> ogni sera alle <b>20:00</b> EssentiaMES legge le giacenze dal database di Mexal (Mexal_Frontier) e aggiorna le sue. Mezz'ora dopo il riordino automatico lavora quindi su dati aggiornati.</div>
+  <figure class="medio centro"><img src="img/ad-16b-pianificazione.jpg" alt=""><figcaption>Automazioni → Pianificazione: orari della sincronizzazione Mexal e del controllo scorte.</figcaption></figure>
+  <ul class="semplice">
+    <li>Per una sincronizzazione immediata: <b>Robot → Sincronizzazione Mexal → Sincronizza ora</b>. Il risultato indica le righe lette, aggiornate, create e ignorate (articoli di Mexal che non esistono in EssentiaMES).</li>
+    <li>Interruttore, ora e vista di Mexal si impostano in <b>Robot → Automazioni</b>, sezioni Sincronizzazione Mexal e Pianificazione. Dopo ogni modifica premi <b>Salva parametri</b>.</li>
+  </ul>
+</section>
+
+<!-- 10 -->
+<section class="proc">
+  <h2><span class="num">10</span>Email automatiche</h2>
+  <table>
+    <tr><th style="width:48mm">Email</th><th>Contenuto</th><th style="width:34mm">Quando</th></tr>
+    <tr><td><b>ODP del giorno</b></td><td>ODP creati e ODP lavorati nella giornata: articolo, quantità, fasi chiuse, fase attuale con macchina, ore di attrezzaggio e lavorazione. In alto i totali e gli ODP ancora aperti.</td><td>ogni giorno alle 20:30</td></tr>
+    <tr><td><b>Uso delle macchine</b></td><td>Per ogni macchina: ore di attrezzaggio e lavorazione registrate negli ultimi 7 giorni, percentuale su un turno di 8 ore, giorni con attività, fasi, ODP e ultimo utilizzo. In rosso le macchine mai usate su EssentiaMES nel periodo.</td><td>il venerdì alle 20:30</td></tr>
+  </table>
+  <ol class="passi">
+    <li>Menu <b>Robot → Automazioni</b>, sezione <b>Email automatiche</b>: scrivi i destinatari separati da virgola, controlla ora e giorno e premi <b>Salva parametri</b>.</li>
+    <li>Accendi gli interruttori delle due email.</li>
+    <li>Nella sezione <b>Email automatiche: anteprima e invio di prova</b> controlla il contenuto (<b>Anteprima</b>, non invia nulla) e fai una prova con <b>Invia ora</b>, se vuoi verso un indirizzo diverso.</li>
+  </ol>
+  <figure class="medio centro"><img src="img/ad-16-automazioni-email.jpg" alt=""></figure>
+  <div class="due">
+    <figure><img src="img/ad-17-automazioni-prova.jpg" alt=""><figcaption>Anteprima e invio di prova.</figcaption></figure>
+    <figure><img src="img/ad-18-mail-odp.jpg" alt=""><figcaption>Anteprima della mail ODP del giorno.</figcaption></figure>
+  </div>
+  <div class="box nota"><span class="t">Se la mail non arriva</span>Serve il server di posta configurato dall'informatico nel file di configurazione di EssentiaMES. Ogni invio, riuscito o no, viene registrato nel Log con il motivo dell'eventuale errore.</div>
+</section>
+
+<!-- 11 -->
+<section class="proc">
+  <h2><span class="num">11</span>La giornata tipo</h2>
+  <table>
+    <tr><th style="width:30mm">Quando</th><th>Cosa</th></tr>
+    <tr><td><b>Mattina</b></td><td>Centro di Controllo: attività ferme, fasi in attesa, lotti da seguire. Ordini Automatici: conferma o annulla le proposte della sera prima. Crea gli ODP del giorno.</td></tr>
+    <tr><td><b>Durante il giorno</b></td><td>Gestisci i lotti (Inviato, Ritornato da C/O) e rispondi alle note degli operatori sulle macchine.</td></tr>
+    <tr><td><b>20:00</b> <i>(automatico)</i></td><td>Sincronizzazione delle giacenze da Mexal.</td></tr>
+    <tr><td><b>20:30</b> <i>(automatico)</i></td><td>Controllo scorte e proposte di riordino (senza G8A), poi la mail con gli ODP del giorno.</td></tr>
+    <tr><td><b>Venerdì 20:30</b> <i>(automatico)</i></td><td>Mail con l'uso delle macchine della settimana: le macchine con poche ore o in rosso vanno verificate con i rispettivi operatori.</td></tr>
+  </table>
+</section>
+
+<!-- 12 -->
+<section class="proc continua">
+  <h2><span class="num">12</span>Manutenzione</h2>
+  <ul class="semplice">
+    <li><b>Backup e pulizia delle attività</b>: lo script <code>database\pulizia-attivita.sql</code>, eseguito in SSMS sul database di EssentiaMES, fa un backup completo verificato, archivia attività e tempi nelle tabelle <code>Archivio_Brighetti_*</code> e poi li cancella. Va lanciato a produzione ferma. Articoli, cicli, giacenze e lotti non vengono toccati.</li>
+    <li><b>Attività nascoste</b>: ogni tanto controlla nelle schede delle macchine le attività “Nascosta dall'operatore” e sistema i cicli che generano fasi inutili.</li>
+    <li><b>Aggiornamenti</b> di EssentiaMES: li installa l'informatico con <code>AGGIORNA.cmd</code>. Configurazione e dati restano invariati.</li>
+  </ul>
+</section>
+
+</body>
+</html>

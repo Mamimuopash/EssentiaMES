@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { requirePageUser } from '@/lib/auth/auth'
-import { Chiavi, leggiBool, leggiTesto } from '@/lib/services/impostazioni'
+import { Chiavi, leggiBool, leggiTesto, predefinito } from '@/lib/services/impostazioni'
 import SyncMexal from './SyncMexal'
 
 export const metadata = { title: 'Sincronizzazione Mexal - EssentiaMES' }
@@ -11,7 +11,7 @@ export default async function SyncMexalPage() {
   const [abilitato, percorso, ora] = await Promise.all([
     leggiBool(Chiavi.SyncMexalAbilitato),
     leggiTesto(Chiavi.SyncMexalPercorsoFile, ''),
-    leggiTesto(Chiavi.SchedulerOraSyncGiornaliera, '02:00'),
+    leggiTesto(Chiavi.SchedulerOraSyncGiornaliera, predefinito(Chiavi.SchedulerOraSyncGiornaliera)),
   ])
   return (
     <div style={{ marginTop: 24 }}>
