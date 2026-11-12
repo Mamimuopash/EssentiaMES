@@ -360,6 +360,10 @@ BEGIN
     );
 END
 GO
+/* Attivita' nascoste dall'operatore nella sua postazione (non cambia lo stato della fase). */
+IF COL_LENGTH('dbo.Brighetti_Attività', 'NascostaOperatore') IS NULL
+    ALTER TABLE dbo.[Brighetti_Attività] ADD [NascostaOperatore] BIT NOT NULL CONSTRAINT [DF_Brighetti_Attivita_NascostaOperatore] DEFAULT(0);
+GO
 
 IF OBJECT_ID('dbo.Brighetti_Tempi', 'U') IS NULL
 BEGIN

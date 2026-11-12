@@ -10,6 +10,7 @@ export const Chiavi = {
   OrdiniAutomaticiPrefissi: 'ordini_automatici.prefissi_codice',
   OrdiniAutomaticiMoltiplicatore: 'ordini_automatici.moltiplicatore_scorta_minima',
   OrdiniAutomaticiIncludiSemilavorati: 'ordini_automatici.includi_semilavorati',
+  OrdiniAutomaticiPrefissiEsclusi: 'ordini_automatici.prefissi_esclusi',
   SyncMexalAbilitato: 'sync_mexal.abilitato',
   SyncMexalPercorsoFile: 'sync_mexal.percorso_file_csv',
   SyncMexalSeparatore: 'sync_mexal.separatore_csv',
@@ -21,6 +22,15 @@ export const Chiavi = {
   LottiRitornatoSbloccaFase: 'lotti.ritornato_sblocca_fase_abilitato',
   SchedulerOraSyncGiornaliera: 'scheduler.ora_sync_giornaliera',
   SchedulerMinutiIntervalloOrdini: 'scheduler.minuti_intervallo_ordini',
+  SchedulerOrariOrdini: 'scheduler.orari_ordini',
+  MailOdpAbilitato: 'mail_odp.abilitato',
+  MailOdpDestinatari: 'mail_odp.destinatari',
+  MailOdpOra: 'mail_odp.ora',
+  MailMacchineAbilitato: 'mail_uso_macchine.abilitato',
+  MailMacchineDestinatari: 'mail_uso_macchine.destinatari',
+  MailMacchineGiorno: 'mail_uso_macchine.giorno',
+  MailMacchineOra: 'mail_uso_macchine.ora',
+  CicliParoleSenzaAffilatura: 'cicli.parole_senza_affilatura',
 } as const
 
 export interface Impostazione {
@@ -51,6 +61,8 @@ export const ELENCO_DEFAULT: Default[] = [
     descrizione: "Se l'articolo non ha una scorta massima, riordina fino a questo multiplo della scorta minima (es. 2 = doppio della scorta minima)." },
   { chiave: Chiavi.OrdiniAutomaticiIncludiSemilavorati, valore: 'true', tipo: TipoImpostazione.Booleano, categoria: 'Ordini Automatici',
     descrizione: 'Genera proposte di riordino anche per i semilavorati, non solo per i prodotti finiti.' },
+  { chiave: Chiavi.OrdiniAutomaticiPrefissiEsclusi, valore: 'G8A', tipo: TipoImpostazione.Testo, categoria: 'Ordini Automatici',
+    descrizione: 'Prefissi dei codici articolo ESCLUSI dagli ordini automatici, separati da virgola (es. G8A): hanno la precedenza sui prefissi inclusi. Lasciare vuoto per non escludere nulla.' },
   { chiave: Chiavi.SyncMexalAbilitato, valore: 'false', tipo: TipoImpostazione.Booleano, categoria: 'Sincronizzazione Mexal',
     descrizione: "Abilita l'aggiornamento giornaliero delle giacenze dal gestionale Mexal." },
   { chiave: Chiavi.SyncMexalPercorsoFile, valore: '', tipo: TipoImpostazione.Testo, categoria: 'Sincronizzazione Mexal',
@@ -72,8 +84,31 @@ export const ELENCO_DEFAULT: Default[] = [
   { chiave: Chiavi.SchedulerOraSyncGiornaliera, valore: '02:00', tipo: TipoImpostazione.Testo, categoria: 'Pianificazione',
     descrizione: 'Ora (HH:mm) della sincronizzazione giornaliera con Mexal.' },
   { chiave: Chiavi.SchedulerMinutiIntervalloOrdini, valore: '60', tipo: TipoImpostazione.Numero, categoria: 'Pianificazione',
-    descrizione: 'Ogni quanti minuti il sistema controlla le scorte per generare le proposte di riordino.' },
+    descrizione: 'Ogni quanti minuti il sistema controlla le scorte per generare le proposte di riordino (usato solo se gli orari fissi qui sotto sono vuoti).' },
+  { chiave: Chiavi.SchedulerOrariOrdini, valore: '20:30', tipo: TipoImpostazione.Testo, categoria: 'Pianificazione',
+    descrizione: 'Orari fissi (HH:mm, separati da virgola o /, es. 20:00/21:00) del controllo scorte per le proposte di riordino. Se compilato sostituisce il controllo ogni N minuti; vuoto = ogni N minuti.' },
+  { chiave: Chiavi.CicliParoleSenzaAffilatura, valore: 'HDRED,TIN,WONDER,WOND,ZIRI,INOX', tipo: TipoImpostazione.Testo, categoria: 'Cicli di lavoro',
+    descrizione: "Parole che, nel codice o nella descrizione dell'articolo, indicano che NON va in affilatura (separate da virgola): i cicli generati per questi articoli non hanno la fase di affilatura. Per i cicli già esistenti usare \"Togli affilatura\" nella pagina Procedure." },
+  { chiave: Chiavi.MailOdpAbilitato, valore: 'false', tipo: TipoImpostazione.Booleano, categoria: 'Email automatiche',
+    descrizione: "Invia ogni giorno un'email con la lista degli ODP del giorno (creati e lavorati)." },
+  { chiave: Chiavi.MailOdpDestinatari, valore: '', tipo: TipoImpostazione.Testo, categoria: 'Email automatiche',
+    descrizione: 'Destinatari della mail giornaliera degli ODP, separati da virgola.' },
+  { chiave: Chiavi.MailOdpOra, valore: '20:30', tipo: TipoImpostazione.Testo, categoria: 'Email automatiche',
+    descrizione: 'Ora di invio (HH:mm) della mail giornaliera degli ODP.' },
+  { chiave: Chiavi.MailMacchineAbilitato, valore: 'false', tipo: TipoImpostazione.Booleano, categoria: 'Email automatiche',
+    descrizione: "Invia ogni settimana un'email con il tempo registrato su EssentiaMES da ogni macchina (attrezzaggio e lavorazione) negli ultimi 7 giorni." },
+  { chiave: Chiavi.MailMacchineDestinatari, valore: '', tipo: TipoImpostazione.Testo, categoria: 'Email automatiche',
+    descrizione: 'Destinatari della mail settimanale sull\'uso delle macchine, separati da virgola.' },
+  { chiave: Chiavi.MailMacchineGiorno, valore: 'venerdì', tipo: TipoImpostazione.Testo, categoria: 'Email automatiche',
+    descrizione: 'Giorno di invio della mail settimanale (lunedì ... domenica, oppure 1-7 con 1 = lunedì).' },
+  { chiave: Chiavi.MailMacchineOra, valore: '20:30', tipo: TipoImpostazione.Testo, categoria: 'Email automatiche',
+    descrizione: 'Ora di invio (HH:mm) della mail settimanale sull\'uso delle macchine.' },
 ]
+
+/** Valore predefinito di una chiave (usato finche' l'impostazione non e' stata creata nel DB). */
+export function predefinito(chiave: string): string {
+  return ELENCO_DEFAULT.find((d) => d.chiave === chiave)?.valore ?? ''
+}
 
 export async function leggiValoreGrezzo(chiave: string, conn: Db = db): Promise<string | null> {
   const r = await conn.one<{ Valore: string | null }>(

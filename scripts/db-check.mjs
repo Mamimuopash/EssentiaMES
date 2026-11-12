@@ -8,7 +8,8 @@ const TABELLE = ['AspNetUsers', 'AspNetRoles', 'AspNetUserRoles', 'AspNetMacchin
   'Brighetti_Tempi', 'Brighetti_Giacenze', 'Brighetti_DettagliGiacenza', 'Brighetti_Lotti', 'Brighetti_Lotti_Articoli', 'Brighetti_Note',
   'Brighetti_Documenti', 'Brighetti_Dati_Macchina', 'Brighetti_Dati_Macchina_Csv', 'Brighetti_Planimetria', 'Brighetti_Impostazioni',
   'Brighetti_OrdiniAutomatici', 'Brighetti_FamiglieProdotto']
-const COLONNE = [['Brighetti_Articoli', 'LottoMinimo'], ['Brighetti_Giacenze', 'QuantitàScortaMassima'], ['Brighetti_Lotti', 'CodiceADLACL']]
+const COLONNE = [['Brighetti_Articoli', 'LottoMinimo'], ['Brighetti_Giacenze', 'QuantitàScortaMassima'], ['Brighetti_Lotti', 'CodiceADLACL'],
+  ['Brighetti_Attività', 'NascostaOperatore']]
 
 const cfg = buildConfig()
 console.log(`Connessione a ${cfg.server ?? '(connection string)'} / ${cfg.database} ...`)

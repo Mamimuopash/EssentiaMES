@@ -84,3 +84,60 @@ export function templateCicloGenerico(): FaseTemplate[] {
     ver(8, 'Magazzino Finito', 'Versamento Finito'),
   ]
 }
+
+/* ------------------------------------------------- articoli senza affilatura */
+
+/** Parole chiave dal pannello ("HDRED, Tin; wonder") -> ["HDRED", "TIN", "WONDER"]. */
+export function parseParoleChiave(testo: string | null | undefined): string[] {
+  const out: string[] = []
+  for (const p of (testo || '').split(/[,;\s]+/)) {
+    const v = p.trim().toUpperCase()
+    if (v && !out.includes(v)) out.push(v)
+  }
+  return out
+}
+
+const escRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * Parola chiave trovata nel codice o nella descrizione dell'articolo (null se nessuna).
+ * La parola deve stare all'INIZIO di una parola del testo: "TIN" trova "BROCCIA TIN",
+ * "G8-TIN" e "TINATA", ma non "SATINATO"; "WOND" trova anche "WONDER".
+ */
+export function parolaSenzaAffilatura(
+  codice: string | null | undefined,
+  descrizione: string | null | undefined,
+  parole: string[],
+): string | null {
+  const testo = `${codice || ''} ${descrizione || ''}`.toUpperCase()
+  for (const p of parole) {
+    if (new RegExp(`(^|[^A-Z0-9])${escRegex(p)}`).test(testo)) return p
+  }
+  return null
+}
+
+/** Fase di affilatura: lavorazione chiamata "Affilatura..." o su una macchina di affilatura. */
+export function eFaseAffilatura(f: { tipo: number; nome: string | null; risorsa?: string | null; reparto?: string | null }): boolean {
+  if (f.tipo !== TipoAttivitaProcedura.Lavorazione) return false
+  return [f.nome, f.risorsa, f.reparto].some((x) => /affilatura|schneberger/i.test(x || ''))
+}
+
+/**
+ * Toglie dal ciclo la lavorazione di affilatura e il versamento che la precede
+ * (magazzino Affilatura), poi rinumera le fasi 1..n: la produzione passa da una
+ * fase alla successiva per numero (IncrementaleProcedura +1), niente buchi.
+ */
+export function togliAffilatura(template: FaseTemplate[]): FaseTemplate[] {
+  const fasi = [...template].sort((a, b) => a.incrementale - b.incrementale)
+  const i = fasi.findIndex((f) => eFaseAffilatura({ tipo: f.tipo, nome: f.nome, risorsa: f.risorsa }))
+  if (i < 0) return fasi
+  const inizio = i > 0 && fasi[i - 1].tipo === TipoAttivitaProcedura.Versamento ? i - 1 : i
+  const tolto = fasi[inizio]
+  const out = [...fasi.slice(0, inizio), ...fasi.slice(i + 1)]
+  const seguente = out[inizio]
+  if (seguente && tolto !== fasi[i] && /affilatura/i.test(seguente.nome)) {
+    // "Versamento da Affilatura a Finito" -> "Versamento da Rettifica a Finito"
+    out[inizio] = { ...seguente, nome: `${tolto.nome.replace(/\s+ad?\s+affilatura\s*$/i, '')} a Finito` }
+  }
+  return out.map((f, n) => ({ ...f, incrementale: n + 1 }))
+}

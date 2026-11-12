@@ -255,7 +255,7 @@ Su Windows Server usare gli script di §7.0, che registrano un vero servizio Win
 Sconsigliate: il DB aziendale deve essere raggiungibile dalla piattaforma, i documenti
 sono salvati su disco e lo scheduler interno richiede un processo sempre attivo.
 Se proprio necessario: `SCHEDULER_ENABLED=false`, cron della piattaforma su
-`/api/cron/ordini-automatici` e `/api/cron/sync-mexal` (header `Authorization: Bearer $CRON_SECRET`)
+`/api/cron/ordini-automatici`, `/api/cron/sync-mexal`, `/api/cron/mail-odp` e `/api/cron/mail-uso-macchine` (header `Authorization: Bearer $CRON_SECRET`)
 e uno storage persistente per `UPLOAD_DIR`.
 
 ## 8. Migrazione dal vecchio software (IIS)

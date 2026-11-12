@@ -345,6 +345,28 @@ la **scorta minima** (`NMP_SMN`) e la **quantità ordinata a fornitori** (`NMP_Q
 EssentiaMES le usa per decidere i riordini automatici, e i valori di Mexal sostituiscono
 quelli inseriti in EssentiaMES.
 
+### Email automatiche, attività nascoste e cicli senza affilatura
+
+Dopo l'aggiornamento che introduce queste funzioni eseguire **una volta** `database\schema.sql`
+in SSMS (aggiunge la colonna `NascostaOperatore`), oppure `.\aggiorna-app.ps1 -AggiornaSchema`.
+Finché lo schema non è aggiornato l'app funziona, ma il pulsante "Nascondi" avvisa che manca.
+
+| Funzione | Dove | Note |
+| --- | --- | --- |
+| **Mail giornaliera ODP** | Automazioni → Email automatiche (`mail_odp.*`) | ODP creati e lavorati nella giornata, con avanzamento e ore. Interruttore spento di default; destinatari separati da virgola; ora predefinita 20:30 |
+| **Mail settimanale uso macchine** | Automazioni → Email automatiche (`mail_uso_macchine.*`) | Ore di attrezzaggio e lavorazione registrate su EssentiaMES da ogni macchina negli ultimi 7 giorni, % su un turno di 8 ore, macchine mai usate in rosso. Predefinito venerdì 20:30 |
+| Anteprima e invio di prova | Automazioni → "Email automatiche: anteprima e invio di prova" | l'anteprima non invia nulla |
+| **Controllo scorte serale** | Automazioni → Pianificazione (`scheduler.orari_ordini`) | orari fissi, es. `20:30` oppure `20:00,21:00`; vuoto = ogni N minuti come prima |
+| **G8A esclusi dai riordini** | Automazioni → Ordini automatici (`ordini_automatici.prefissi_esclusi`) | predefinito `G8A`; svuotare il campo per includerli di nuovo |
+| **Nascondere attività inutili** | Postazione operatore, pulsante "Nascondi" accanto a ogni attività | la fase resta com'è e l'operatore può rivederla con "Mostra". Se viene avviata torna visibile. La scheda macchina mostra le nascoste con un'etichetta |
+| **Articoli senza affilatura** | Automazioni → Cicli di lavoro (`cicli.parole_senza_affilatura`) | predefinito `HDRED,TIN,WONDER,WOND,ZIRI,INOX`, cercate all'inizio di una parola del codice o della descrizione. I cicli dei nuovi articoli nascono senza affilatura |
+| Cicli esistenti | Procedure → "Togli affilatura (HDRED, TIN...)" | prima mostra l'elenco, poi toglie l'affilatura e il versamento che la precede e rinumera le fasi. Salta gli articoli con ODP aperti. Le fasi tolte restano nell'Audit |
+| Cicli per tutti gli articoli | Procedure → "Genera cicli mancanti" | crea il ciclo G o B in base al codice, altrimenti quello generico (senza affilatura per le parole chiave); prima mostra quanti ne crea |
+
+Le email richiedono il server SMTP in `essentia.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`,
+eventualmente `SMTP_USER`/`SMTP_PASSWORD`, poi `Restart-Service EssentiaMES`). Ogni invio, riuscito o no,
+è registrato nel Log con indirizzo `EmailAutomatiche/...`.
+
 ## 7. Passo 4 – Verifica e collaudo
 
 ```powershell
@@ -435,7 +457,7 @@ tra accenti gravi (`` DB_PASSWORD=`l'apice` ``).
 | `SESSION_SECRET` | (casuale) | se cambia, tutti gli utenti devono rifare il login |
 | `UPLOAD_DIR` / `LEGACY_UPLOAD_DIRS` | | cartella dei documenti / cartelle extra dove cercarli |
 | `SCHEDULER_ENABLED` / `CRON_SECRET` | `true` | job automatici interni / token per `/api/cron/*` |
-| `SMTP_*` | | email delle richieste materiali (righe di esempio nel file) |
+| `SMTP_*` | | email: richieste materiali, ODP giornalieri, uso macchine (righe di esempio nel file) |
 
 ## 11. Aggiornamenti, backup, disinstallazione
 
@@ -451,6 +473,13 @@ versione precedente.** Configurazione, documenti e log non vengono toccati.
   pianificata di Windows che esegue `BACKUP DATABASE` tramite `sqlcmd`);
 - `C:\EssentiaMES\data` (documenti allegati);
 - `C:\EssentiaMES\config\essentia.env`.
+
+**Backup e pulizia delle attività precedenti:** `database\pulizia-attivita.sql` (da SSMS, account
+amministratore, connessi al database di EssentiaMES). Con `@Esegui = 0` mostra solo quanti ODP
+toglierebbe (ultima modifica prima di `@DataLimite`; con `@SoloConclusi = 1` solo quelli conclusi).
+Con `@Esegui = 1` fa prima un backup completo verificato (`COPY_ONLY`), copia attività e tempi
+nelle tabelle `Archivio_Brighetti_*` e poi li cancella. Gli ODP in attrezzaggio o lavorazione non vengono mai
+toccati.
 
 **Disinstallare:** `C:\EssentiaMES\strumenti\DISINSTALLA.cmd`
 (`-RimuoviIIS` per il sito IIS, `-RimuoviTutto` anche per configurazione e documenti).

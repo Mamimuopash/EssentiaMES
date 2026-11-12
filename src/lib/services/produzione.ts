@@ -9,6 +9,7 @@ import { writeAudit, safeLog, L, type Operatore } from '@/lib/audit'
 import { dateDiffMinutes, fmtDate, vbCInt } from '@/lib/format'
 import { round2 } from './regole'
 import { creaLottoDaVersamento } from './lotti'
+import { nascondiAttivitaDisponibile } from '@/lib/schema-opzionale'
 
 /*
  * Flusso di produzione: porting di Brighetti_GiacenzaController.CreateODP e di
@@ -32,6 +33,8 @@ export interface Attivita {
   UltimaModifica_OperatoreID: string | null
   UltimaModifica_Operatore: string | null
   UltimaModifica_Data: Date | null
+  /** Nascosta dall'operatore nella sua postazione (solo nelle liste della macchina). */
+  Nascosta?: boolean
 }
 
 export const ATTIVITA_COLS = `[IdAttività], OrdineDiProduzione, IncrementaleProcedura, CodiceArticolo, [NomeAttività], idReparto, idMacchinaMagazzino,
@@ -117,12 +120,32 @@ export async function attivitaInCorsoMacchina(idMacchina: number): Promise<Attiv
   )
 }
 
+/** Attivita' avviabili sulla macchina (in attesa o sospese), comprese quelle nascoste dall'operatore (campo Nascosta). */
 export async function attivitaDisponibiliMacchina(idMacchina: number): Promise<Attivita[]> {
-  return db.query<Attivita>(
-    `SELECT ${ATTIVITA_COLS} FROM dbo.[Brighetti_Attività]
+  const nascosta = (await nascondiAttivitaDisponibile()) ? 'NascostaOperatore' : '0'
+  const righe = await db.query<Attivita & { Nascosta: boolean | number }>(
+    `SELECT ${ATTIVITA_COLS}, CAST(${nascosta} AS BIT) AS Nascosta FROM dbo.[Brighetti_Attività]
       WHERE idMacchinaMagazzino = @m AND [StatoAttività] IN (@w, @s) ORDER BY [IdAttività]`,
     { m: idMacchina, w: TipoStatoAttivita.In_attesa, s: TipoStatoAttivita.StandBy },
   )
+  return righe.map((r) => ({ ...r, Nascosta: !!r.Nascosta }))
+}
+
+/**
+ * L'operatore nasconde (o rimette in lista) un'attivita' inutile sulla sua macchina.
+ * Lo stato della fase e l'ultima modifica NON cambiano (l'ultima modifica e' l'inizio
+ * del prossimo tempo registrato): l'attivita' sparisce solo dalla lista della postazione.
+ */
+export async function nascondiAttivita(id: number, nascosta: boolean, op: Operatore) {
+  if (!(await nascondiAttivitaDisponibile())) {
+    throw new ErroreProduzione('Funzione non ancora attiva: aggiornare il database eseguendo database/schema.sql.')
+  }
+  const a = await getAttivita(id)
+  if (!a) throw new ErroreProduzione('Attività non trovata.')
+  await db.exec(`UPDATE dbo.[Brighetti_Attività] SET NascostaOperatore = @n WHERE [IdAttività] = @id`, { id, n: nascosta })
+  await writeAudit(db, L.Info, 'Brighetti_Operatori/NascondiAttività',
+    `${nascosta ? 'Attività nascosta' : 'Attività rimessa in lista'} dall'operatore: ${id} (${a.NomeAttività ?? ''}, articolo ${a.CodiceArticolo ?? ''}, ODP ${a.OrdineDiProduzione ?? ''})`,
+    { IdAttività: id, Nascosta: nascosta }, op)
 }
 
 /** Avvio attivita': stato 0 = attrezzaggio, 1 = lavorazione. */
@@ -137,8 +160,10 @@ export async function apriAttivita(id: number, stato: number, op: Operatore) {
     throw new ErroreProduzione(`Sulla macchina è già in corso l'attività "${inCorso.NomeAttività}".`)
   }
   const nuovo = stato === 0 ? TipoStatoAttivita.In_Attrezzaggio : TipoStatoAttivita.In_Lavorazione
+  // Un'attivita' avviata torna comunque visibile (se era stata nascosta).
+  const mostra = (await nascondiAttivitaDisponibile()) ? ', NascostaOperatore = 0' : ''
   await db.exec(
-    `UPDATE dbo.[Brighetti_Attività] SET [StatoAttività] = @s, UltimaModifica_OperatoreID = @opId, UltimaModifica_Operatore = @opName, UltimaModifica_Data = @now
+    `UPDATE dbo.[Brighetti_Attività] SET [StatoAttività] = @s, UltimaModifica_OperatoreID = @opId, UltimaModifica_Operatore = @opName, UltimaModifica_Data = @now${mostra}
       WHERE [IdAttività] = @id`,
     { s: nuovo, id, opId: op.id, opName: op.name, now: new Date() },
   )

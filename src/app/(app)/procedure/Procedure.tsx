@@ -20,6 +20,14 @@ export interface ProceduraRow {
   NomeReparto: string | null
 }
 
+interface ArticoloAffilatura {
+  CodiceArticolo: string
+  DescrizioneArticolo: string | null
+  Parola: string
+  FaseAffilatura: string | null
+  AttivitaAperte: number
+}
+
 const vuoto = { CodiceArticolo: '', IncrementaleProcedura: '1', TipoAttivita: '1', NomeAttivita: '', idReparto: '0', idMacchinaMagazzino: '0' }
 
 export default function Procedure({ rows, articolo }: { rows: ProceduraRow[]; articolo: string }) {
@@ -27,6 +35,7 @@ export default function Procedure({ rows, articolo }: { rows: ProceduraRow[]; ar
   const [filtro, setFiltro] = useState(articolo)
   const [form, setForm] = useState<{ id: number | null; v: typeof vuoto } | null>(null)
   const [busy, setBusy] = useState(false)
+  const [affil, setAffil] = useState<{ caricamento: boolean; parole: string[]; articoli: ArticoloAffilatura[] } | null>(null)
   const macchine = useOpzioni('macchine', form !== null)
   const magazzini = useOpzioni('magazzini', form !== null)
   const reparti = useOpzioni('reparti', form !== null)
@@ -50,10 +59,39 @@ export default function Procedure({ rows, articolo }: { rows: ProceduraRow[]; ar
     if (r.ok) router.refresh()
   }
   async function generaMancanti() {
-    if (!(await conferma('Generare i cicli mancanti?', 'Crea il ciclo generico (Tornitura → C/O → Rettifica → Affilatura → Finito) per TUTTI gli articoli senza procedure.', 'Sì, genera'))) return
+    const a = await api<{ anteprima: { articoli: number; G: number; B: number; generico: number; senzaAffilatura: number } }>('/api/articoli/genera-cicli')
+    if (!a.ok) return notify(false, a.message)
+    const p = a.anteprima
+    if (p.articoli === 0) return notify(true, 'Tutti gli articoli hanno già un ciclo di lavoro.')
+    const testo =
+      `Articoli senza ciclo: ${p.articoli}. Verranno creati ${p.G} cicli G, ${p.B} cicli B e ${p.generico} cicli generici ` +
+      `(Tornitura → Tratt. Termico → Rettifica → Affilatura → Finito)` +
+      (p.senzaAffilatura ? `; ${p.senzaAffilatura} senza affilatura (parole HDRED, TIN, ...).` : '.')
+    if (!(await conferma('Generare i cicli mancanti?', testo, 'Sì, genera'))) return
+    setBusy(true)
     const r = await api('/api/articoli/genera-cicli', { method: 'POST' })
+    setBusy(false)
     notify(r.ok, r.message)
     router.refresh()
+  }
+  async function apriSenzaAffilatura() {
+    setAffil({ caricamento: true, parole: [], articoli: [] })
+    const r = await api<{ parole: string[]; articoli: ArticoloAffilatura[] }>('/api/procedure/senza-affilatura')
+    if (!r.ok) {
+      setAffil(null)
+      return notify(false, r.message)
+    }
+    setAffil({ caricamento: false, parole: r.parole, articoli: r.articoli })
+  }
+  async function togliAffilatura() {
+    setBusy(true)
+    const r = await api('/api/procedure/senza-affilatura', { method: 'POST' })
+    setBusy(false)
+    notify(r.ok, r.message)
+    if (r.ok) {
+      setAffil(null)
+      router.refresh()
+    }
   }
   const set = (k: keyof typeof vuoto) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => {
@@ -83,8 +121,11 @@ export default function Procedure({ rows, articolo }: { rows: ProceduraRow[]; ar
             <input className="form-control" placeholder="Codice articolo esatto" value={filtro} onChange={(e) => setFiltro(e.target.value)} />
             <button className="btn btn-outline-secondary">Filtra</button>
           </form>
-          <button className="btn btn-outline-secondary" onClick={generaMancanti}>
+          <button className="btn btn-outline-secondary" disabled={busy} onClick={generaMancanti}>
             Genera cicli mancanti
+          </button>
+          <button className="btn btn-outline-secondary" disabled={busy} onClick={apriSenzaAffilatura}>
+            Togli affilatura (HDRED, TIN...)
           </button>
           <button
             className="btn btn-grad px-4"
@@ -143,6 +184,66 @@ export default function Procedure({ rows, articolo }: { rows: ProceduraRow[]; ar
           },
         ]}
       />
+      <Modal
+        title="Articoli che non vanno in affilatura"
+        open={affil !== null}
+        onClose={() => setAffil(null)}
+        footer={
+          affil && affil.articoli.some((a) => a.AttivitaAperte === 0) ? (
+            <button className="btn btn-danger px-4" disabled={busy} onClick={togliAffilatura}>
+              {busy ? 'Modifica in corso...' : `Togli affilatura da ${affil.articoli.filter((a) => a.AttivitaAperte === 0).length} cicli`}
+            </button>
+          ) : undefined
+        }
+      >
+        {!affil || affil.caricamento ? (
+          <div className="text-center py-4">
+            <i className="fa fa-circle-notch fa-spin fa-2x" />
+          </div>
+        ) : (
+          <>
+            <p>
+              Parole chiave (pannello Automazioni, <code>cicli.parole_senza_affilatura</code>): <b>{affil.parole.join(', ') || '-'}</b>. Cercate
+              all&apos;inizio di una parola del codice o della descrizione dell&apos;articolo.
+            </p>
+            {affil.articoli.length === 0 ? (
+              <p className="text-muted">Nessun ciclo esistente da modificare: gli articoli con queste parole non hanno la fase di affilatura.</p>
+            ) : (
+              <>
+                <p className="text-muted small">
+                  Dal ciclo di questi articoli vengono tolti l&apos;affilatura e il versamento nel magazzino Affilatura; le fasi seguenti vengono
+                  rinumerate. Gli ODP già creati non cambiano: gli articoli con attività ancora aperte vengono saltati (si possono rifare più tardi).
+                  Le fasi tolte restano registrate nell&apos;Audit.
+                </p>
+                <div style={{ maxHeight: '50vh', overflow: 'auto' }}>
+                  <table className="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Articolo</th>
+                        <th>Descrizione</th>
+                        <th>Parola</th>
+                        <th>Fase tolta</th>
+                        <th>ODP aperti</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {affil.articoli.map((a) => (
+                        <tr key={a.CodiceArticolo} className={a.AttivitaAperte > 0 ? 'text-muted' : ''}>
+                          <td><b>{a.CodiceArticolo}</b></td>
+                          <td>{a.DescrizioneArticolo}</td>
+                          <td>{a.Parola}</td>
+                          <td>{a.FaseAffilatura}</td>
+                          <td>{a.AttivitaAperte > 0 ? `${a.AttivitaAperte} attività: saltato` : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </Modal>
       <Modal
         title={form?.id ? 'Modifica fase' : 'Nuova fase'}
         open={form !== null}

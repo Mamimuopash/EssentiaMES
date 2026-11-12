@@ -6,6 +6,11 @@ import {
   jobOrdiniDaEseguire,
   parseOra,
   parsePrefissi,
+  codiceInAutomatismo,
+  parseOrari,
+  eOrario,
+  parseGiornoSettimana,
+  nomeGiorno,
   sottoScorta,
 } from '@/lib/services/regole'
 import { dateDiffMinutes, fmtDate, fmtDateTime, vbCInt } from '@/lib/format'
@@ -77,5 +82,39 @@ describe('formati e funzioni VB', () => {
     const d = new Date('2026-07-15T08:05:09Z') // 10:05:09 ora legale italiana
     expect(fmtDateTime(d)).toBe('15/07/2026 10:05:09')
     expect(fmtDate(d)).toBe('15/07/2026')
+  })
+})
+
+describe('esclusioni e orari degli automatismi', () => {
+  it('prefissi esclusi (es. G8A) hanno la precedenza sugli inclusi', () => {
+    expect(codiceInAutomatismo('G8A-100', ['G8'], ['G8A'])).toBe(false)
+    expect(codiceInAutomatismo('g8a-100', ['G8'], ['G8A'])).toBe(false)
+    expect(codiceInAutomatismo('G8B-100', ['G8'], ['G8A'])).toBe(true)
+    expect(codiceInAutomatismo('G12-1', ['G8'], ['G8A'])).toBe(false)
+    expect(codiceInAutomatismo('X1', [], [])).toBe(true)
+    expect(codiceInAutomatismo('G8A1', [], ['G8A'])).toBe(false)
+    expect(codiceInAutomatismo(null, [], ['G8A'])).toBe(true)
+  })
+  it('orari fissi', () => {
+    expect(parseOrari('20:30, 21:00')).toEqual([[20, 30], [21, 0]])
+    expect(parseOrari('20.00;21:00 21:00')).toEqual([[20, 0], [21, 0]])
+    expect(parseOrari('20:00/21:00')).toEqual([[20, 0], [21, 0]])
+    expect(parseOrari('25:00, 8, abc, 7:5')).toEqual([])
+    expect(parseOrari('')).toEqual([])
+    const d = new Date(2026, 10, 12, 20, 30, 0)
+    expect(eOrario(d, [[20, 30]])).toBe(true)
+    expect(eOrario(d, [[20, 0], [21, 0]])).toBe(false)
+  })
+  it('giorno della settimana', () => {
+    expect(parseGiornoSettimana('venerdì')).toBe(5)
+    expect(parseGiornoSettimana('Ven')).toBe(5)
+    expect(parseGiornoSettimana('1')).toBe(1)
+    expect(parseGiornoSettimana('7')).toBe(0)
+    expect(parseGiornoSettimana('domenica')).toBe(0)
+    expect(parseGiornoSettimana('mer')).toBe(3)
+    expect(parseGiornoSettimana('mar')).toBe(2)
+    expect(parseGiornoSettimana('xx', 4)).toBe(4)
+    expect(parseGiornoSettimana('', 5)).toBe(5)
+    expect(nomeGiorno(5)).toBe('venerdì')
   })
 })

@@ -1,7 +1,7 @@
 import 'server-only'
-import nodemailer from 'nodemailer'
 import { db, withTransaction } from '@/lib/db'
 import { writeAudit, writeLog, safeLog, L, type Operatore } from '@/lib/audit'
+import { inviaMail } from '@/lib/mail'
 
 /*
  * Richieste materiali (tabelle legacy OrdiniInCorso -> Ordini) con notifica email,
@@ -54,16 +54,6 @@ function escapeHtml(s: string) {
 
 export function smtpConfigurato() {
   return !!process.env.SMTP_HOST && !!process.env.SMTP_RICHIESTE_MATERIALI_TO
-}
-
-async function inviaMail(to: string, subject: string, html: string) {
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 25),
-    secure: ['1', 'true'].includes((process.env.SMTP_SECURE || '').toLowerCase()),
-    auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD || '' } : undefined,
-  })
-  await transport.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject, html })
 }
 
 /** Converte il carrello in un ordine (tabella Ordini) e avvisa l'amministratore via email. */

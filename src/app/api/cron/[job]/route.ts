@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { NextResponse, type NextRequest } from 'next/server'
-import { jobOrdiniAutomatici, jobSyncMexal } from '@/lib/scheduler'
+import { jobMailOdp, jobMailUsoMacchine, jobOrdiniAutomatici, jobSyncMexal } from '@/lib/scheduler'
 
 /*
  * Esecuzione dei job pianificati da uno scheduler ESTERNO (cron di sistema,
@@ -17,6 +17,8 @@ async function handle(req: NextRequest, { params }: { params: Promise<{ job: str
   const { job } = await params
   if (job === 'ordini-automatici') return NextResponse.json({ ok: true, esito: await jobOrdiniAutomatici() })
   if (job === 'sync-mexal') return NextResponse.json({ ok: true, esito: await jobSyncMexal() })
+  if (job === 'mail-odp') return NextResponse.json({ ok: true, esito: await jobMailOdp() })
+  if (job === 'mail-uso-macchine') return NextResponse.json({ ok: true, esito: await jobMailUsoMacchine() })
   return NextResponse.json({ ok: false, message: 'Job sconosciuto' }, { status: 404 })
 }
 

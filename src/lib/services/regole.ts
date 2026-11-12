@@ -13,6 +13,17 @@ export function parsePrefissi(grezzo: string | null | undefined): string[] {
     .filter((p) => p.length > 0)
 }
 
+/**
+ * Codice coinvolto negli ordini automatici: deve iniziare con uno dei prefissi
+ * inclusi (lista vuota = tutti) e con NESSUNO dei prefissi esclusi (es. G8A),
+ * che hanno la precedenza. Confronto senza distinguere maiuscole/minuscole.
+ */
+export function codiceInAutomatismo(codice: string | null | undefined, inclusi: string[], esclusi: string[]): boolean {
+  const c = (codice || '').trim().toUpperCase()
+  if (inclusi.length > 0 && !inclusi.some((p) => c.startsWith(p.toUpperCase()))) return false
+  return !esclusi.some((p) => c.startsWith(p.toUpperCase()))
+}
+
 /** Sotto scorta: punto di riordino definito e (giacenza + in arrivo) <= scorta minima. */
 export function sottoScorta(giacenza: number, inArrivo: number, scortaMinima: number): boolean {
   if (scortaMinima <= 0) return false
@@ -54,6 +65,52 @@ export function parseOra(valore: string | null | undefined): [number, number] {
   if (minuto < 0 || minuto > 59) minuto = 0
   return [ora, minuto]
 }
+
+/**
+ * Elenco di orari fissi "20:30, 21:00" (anche "20:00/21:00") -> [[20, 30], [21, 0]].
+ * Le voci non valide sono ignorate; testo vuoto = nessun orario fisso.
+ */
+export function parseOrari(valore: string | null | undefined): [number, number][] {
+  const out: [number, number][] = []
+  for (const voce of (valore || '').split(/[,;/\s]+/)) {
+    const m = /^(\d{1,2})[:.](\d{2})$/.exec(voce.trim())
+    if (!m) continue
+    const ora = Number(m[1])
+    const minuto = Number(m[2])
+    if (ora > 23 || minuto > 59) continue
+    if (!out.some(([o, mi]) => o === ora && mi === minuto)) out.push([ora, minuto])
+  }
+  return out
+}
+
+/** Vero se l'istante cade (al minuto) su uno degli orari indicati. */
+export function eOrario(d: Date, orari: [number, number][]): boolean {
+  return orari.some(([o, m]) => d.getHours() === o && d.getMinutes() === m)
+}
+
+const GIORNI = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato']
+
+/**
+ * Giorno della settimana dal pannello: numero 1-7 (1 = lunedi', 7 = domenica)
+ * oppure nome italiano anche abbreviato ("ven", "venerdì"). Restituisce l'indice
+ * di Date.getDay() (0 = domenica); `def` se il valore non e' riconosciuto.
+ */
+export function parseGiornoSettimana(valore: string | null | undefined, def = 5): number {
+  const v = (valore || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (/^[1-7]$/.test(v)) return Number(v) % 7
+  if (v.length >= 3) {
+    const i = GIORNI.findIndex((g) => g.startsWith(v))
+    if (i >= 0) return i
+  }
+  return def
+}
+
+/** Nome del giorno (indice di Date.getDay()) per i messaggi. */
+export const nomeGiorno = (i: number) => ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'][((i % 7) + 7) % 7]
 
 /**
  * Il job ordini deve partire in questo minuto? (equivalente del cron Hangfire:

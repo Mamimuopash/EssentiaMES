@@ -62,7 +62,7 @@ export const POST = route({ admin: true, indirizzo: 'Brighetti_Articolo/Create' 
     { ...art, opId: op.id, opName: op.name, now: new Date() },
   )
   let messaggioCiclo = ''
-  const ciclo = await creaCicloAutomatico(codice, op)
+  const ciclo = await creaCicloAutomatico(codice, op, art.DescrizioneArticolo)
   if (ciclo?.creato) messaggioCiclo = ` Ciclo di lavoro standard creato (${ciclo.fasi} fasi).`
   else if (ciclo && ciclo.mancanti.length) messaggioCiclo = ` Ciclo automatico NON creato: mancano ${ciclo.mancanti.join(', ')}.`
   await writeAudit(db, L.Info, 'Brighetti_Articolo/Create', `Articolo creato: ${codice} - ${art.DescrizioneArticolo ?? ''}`, { Id: id, ...art }, op)

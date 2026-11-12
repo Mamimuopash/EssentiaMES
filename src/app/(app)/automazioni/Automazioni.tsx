@@ -22,6 +22,19 @@ export default function Automazioni({ gruppi, schedulerAttivo }: { gruppi: { Cat
   })
   const [prefisso, setPrefisso] = useState('')
   const [lotto, setLotto] = useState('0')
+  const [giornoMail, setGiornoMail] = useState(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })
+  const [destProva, setDestProva] = useState('')
+  const [invio, setInvio] = useState<string | null>(null)
+
+  async function inviaOra(tipo: 'odp' | 'macchine') {
+    setInvio(tipo)
+    const r = await api(`/api/email-automatiche/${tipo}`, { body: { giorno: giornoMail, destinatari: destProva } })
+    setInvio(null)
+    notify(r.ok, r.message)
+  }
 
   async function cambia(id: number) {
     setToggle((t) => ({ ...t, [id]: !t[id] }))
@@ -92,6 +105,41 @@ export default function Automazioni({ gruppi, schedulerAttivo }: { gruppi: { Cat
         >
           Salva parametri
         </button>
+      </div>
+      <div className="card mb-3">
+        <div className="card-header">
+          <strong>Email automatiche: anteprima e invio di prova</strong>
+        </div>
+        <div className="card-body">
+          <p className="text-muted">
+            Controlla il contenuto delle email prima di attivarle. L&apos;anteprima non invia nulla; &quot;Invia ora&quot; spedisce subito ai destinatari
+            indicati qui sotto oppure, se il campo è vuoto, a quelli configurati sopra. Per l&apos;invio serve il server SMTP nel file di configurazione (SMTP_HOST, SMTP_FROM).
+          </p>
+          <div className="row g-2 mb-3">
+            <div className="col-md-3">
+              <label className="form-label small">Giornata di riferimento</label>
+              <input className="form-control" type="date" value={giornoMail} onChange={(e) => setGiornoMail(e.target.value)} />
+            </div>
+            <div className="col-md-9">
+              <label className="form-label small">Destinatari della prova (facoltativo)</label>
+              <input className="form-control" placeholder="es. nome@azienda.it" value={destProva} onChange={(e) => setDestProva(e.target.value)} />
+            </div>
+          </div>
+          <div className="d-flex flex-wrap gap-2">
+            <a className="btn btn-outline-secondary" href={`/api/email-automatiche/odp?giorno=${giornoMail}`} target="_blank" rel="noreferrer">
+              Anteprima ODP del giorno
+            </a>
+            <button className="btn btn-outline-primary" disabled={invio !== null} onClick={() => inviaOra('odp')}>
+              {invio === 'odp' ? 'Invio...' : 'Invia ora ODP del giorno'}
+            </button>
+            <a className="btn btn-outline-secondary" href={`/api/email-automatiche/macchine?giorno=${giornoMail}`} target="_blank" rel="noreferrer">
+              Anteprima uso macchine (7 giorni)
+            </a>
+            <button className="btn btn-outline-primary" disabled={invio !== null} onClick={() => inviaOra('macchine')}>
+              {invio === 'macchine' ? 'Invio...' : 'Invia ora uso macchine'}
+            </button>
+          </div>
+        </div>
       </div>
       <div className="card mb-3">
         <div className="card-header">

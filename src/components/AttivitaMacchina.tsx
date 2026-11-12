@@ -17,6 +17,7 @@ export interface AttivitaView {
   QuantitàScartata: number
   StatoAttività: number
   UltimaModifica_Data: string | Date | null
+  Nascosta?: boolean
 }
 
 interface Dettaglio {
@@ -45,6 +46,9 @@ export default function AttivitaMacchina({
   const [tab, setTab] = useState<'dett' | 'note' | 'doc'>('dett')
   const [stato, setStato] = useState('1')
   const [busy, setBusy] = useState(false)
+  // Attivita' nascoste dall'operatore: fuori lista finche' non si chiede di vederle.
+  const [mostraNascoste, setMostraNascoste] = useState(false)
+  const [nascondendo, setNascondendo] = useState<number | null>(null)
 
   // Come il vecchio "cache_clear": aggiorna la lista ogni 5 secondi se nessuna finestra e' aperta.
   useEffect(() => {
@@ -86,6 +90,45 @@ export default function AttivitaMacchina({
     }
   }
 
+  const nascondi = async (id: number, nascosta: boolean) => {
+    setNascondendo(id)
+    const r = await api<{ ok: boolean; message?: string }>(`/api/attivita/${id}/nascondi`, { body: { nascosta } })
+    setNascondendo(null)
+    notify(r.ok, r.message)
+    if (r.ok) {
+      if (aperta === id) setAperta(null)
+      router.refresh()
+    }
+  }
+
+  const numNascoste = attivita.filter((x) => x.Nascosta).length
+  const elenco = azionabile && !mostraNascoste ? attivita.filter((x) => !x.Nascosta) : attivita
+  const barraNascoste =
+    azionabile && numNascoste > 0 ? (
+      <div className="d-flex align-items-center gap-2 mb-3 text-muted">
+        <i className="fa-regular fa-eye-slash" />
+        <span>
+          {numNascoste === 1 ? '1 attività nascosta' : `${numNascoste} attività nascoste`}
+        </span>
+        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setMostraNascoste((v) => !v)}>
+          {mostraNascoste ? 'Nascondi di nuovo' : 'Mostra'}
+        </button>
+      </div>
+    ) : null
+
+  if (attivita.length > 0 && elenco.length === 0) {
+    return (
+      <>
+        <div className="mt-5 empty-state">
+          <i className="fa-solid fa-face-laugh fa-6x fa-gradient" />
+          <h3 className="mt-3 fw-bold text-dark">Nessuna attività!</h3>
+          <p>Tutte le attività di questa macchina sono state nascoste.</p>
+        </div>
+        {barraNascoste}
+      </>
+    )
+  }
+
   if (attivita.length === 0 && azionabile) {
     return (
       <div className="mt-5 empty-state">
@@ -100,15 +143,24 @@ export default function AttivitaMacchina({
   const a = det?.attivita
   return (
     <>
-      {attivita.map((x) => {
+      {barraNascoste}
+      {elenco.map((x) => {
         const card = (
-          <div className="cardArticoloAttività">
+          <div className="cardArticoloAttività" style={x.Nascosta ? { opacity: 0.6 } : undefined}>
             <div className="card-body">
               <div className="row w-100 align-items-center">
                 <div className="col-12 col-md-4 text-start">
                   <div>
                     Attività: <b>{x.NomeAttività}</b>
                     {x.StatoAttività === TipoStatoAttivita.StandBy && <p className="m-0 text-warning">(Attività precedentemente aperta)</p>}
+                    {x.Nascosta && (
+                      <p className="m-0">
+                        <span className="badge bg-secondary">
+                          <i className="fa-regular fa-eye-slash me-1" />
+                          Nascosta dall&apos;operatore
+                        </span>
+                      </p>
+                    )}
                   </div>
                   <div>Articolo: {x.CodiceArticolo}</div>
                   <div className="text-muted small">Data inserimento: {fmtDateTime(x.UltimaModifica_Data)}</div>
@@ -138,9 +190,22 @@ export default function AttivitaMacchina({
           <div className="row" key={x.IdAttività}>
             <div className="col-12">
               {azionabile ? (
-                <button type="button" className="BtnApriAttivitàModal" onClick={() => apri(x.IdAttività)}>
-                  {card}
-                </button>
+                <div className="d-flex align-items-start">
+                  <button type="button" className="BtnApriAttivitàModal" style={{ flex: 1, minWidth: 0 }} onClick={() => apri(x.IdAttività)}>
+                    {card}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary mt-3"
+                    style={{ whiteSpace: 'nowrap', minWidth: 112 }}
+                    disabled={nascondendo === x.IdAttività}
+                    title={x.Nascosta ? 'Rimetti l’attività nella lista' : 'Nascondi questa attività dalla lista della macchina'}
+                    onClick={() => nascondi(x.IdAttività, !x.Nascosta)}
+                  >
+                    <i className={`fa-regular ${x.Nascosta ? 'fa-eye' : 'fa-eye-slash'} me-1`} />
+                    {x.Nascosta ? 'Ripristina' : 'Nascondi'}
+                  </button>
+                </div>
               ) : (
                 card
               )}

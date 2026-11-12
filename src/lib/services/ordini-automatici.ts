@@ -2,8 +2,8 @@ import 'server-only'
 import { db } from '@/lib/db'
 import { StatoOrdineAutomatico, TipoMagazzino } from '@/lib/enums'
 import { writeLog, L, type Operatore } from '@/lib/audit'
-import { Chiavi, leggiBool, leggiNumero, leggiTesto } from './impostazioni'
-import { calcolaQuantitaProposta, parsePrefissi, sottoScorta } from './regole'
+import { Chiavi, leggiBool, leggiNumero, leggiTesto, predefinito } from './impostazioni'
+import { calcolaQuantitaProposta, codiceInAutomatismo, parsePrefissi, sottoScorta } from './regole'
 
 /*
  * Porting di Servizi/OrdiniAutomaticiService.vb: genera PROPOSTE di riordino
@@ -13,6 +13,8 @@ import { calcolaQuantitaProposta, parsePrefissi, sottoScorta } from './regole'
 export interface EsitoGenerazione {
   Generate: number
   Saltate: number
+  /** Sotto scorta ma esclusi dai prefissi esclusi (es. G8A). */
+  Escluse: number
   Messaggio: string
 }
 
@@ -33,7 +35,7 @@ export async function generaProposte(
   opts: { rispettaToggle?: boolean; origine?: string } = {},
 ): Promise<EsitoGenerazione> {
   const origine = opts.origine ?? 'Manuale'
-  const esito: EsitoGenerazione = { Generate: 0, Saltate: 0, Messaggio: '' }
+  const esito: EsitoGenerazione = { Generate: 0, Saltate: 0, Escluse: 0, Messaggio: '' }
 
   if (opts.rispettaToggle && !(await leggiBool(Chiavi.OrdiniAutomaticiAbilitato))) {
     esito.Messaggio = 'Automatismo ordini automatici disattivato.'
@@ -41,6 +43,7 @@ export async function generaProposte(
   }
 
   const prefissi = parsePrefissi(await leggiTesto(Chiavi.OrdiniAutomaticiPrefissi, ''))
+  const esclusi = parsePrefissi(await leggiTesto(Chiavi.OrdiniAutomaticiPrefissiEsclusi, predefinito(Chiavi.OrdiniAutomaticiPrefissiEsclusi)))
   let moltiplicatore = await leggiNumero(Chiavi.OrdiniAutomaticiMoltiplicatore, 2)
   if (moltiplicatore <= 0) moltiplicatore = 2
   const includiSemilavorati = await leggiBool(Chiavi.OrdiniAutomaticiIncludiSemilavorati, true)
@@ -84,7 +87,11 @@ export async function generaProposte(
     if (!sottoScorta(g.QuantitaGiacenza, g.InPrevisioneEntrata, g.QuantitaSottoscorta)) continue
 
     const codice = g.CodiceRisolto ?? ''
-    if (prefissi.length > 0 && !prefissi.some((p) => codice.toUpperCase().startsWith(p.toUpperCase()))) continue
+    if (!codiceInAutomatismo(codice, prefissi, [])) continue
+    if (!codiceInAutomatismo(codice, [], esclusi)) {
+      esito.Escluse++
+      continue
+    }
 
     if (!includiSemilavorati && g.CodiceMagazzino && contoLavoro.has(g.CodiceMagazzino)) {
       esito.Saltate++
@@ -136,7 +143,7 @@ export async function generaProposte(
     db,
     L.Info,
     'OrdiniAutomaticiService/GeneraProposte',
-    `Proposte di riordino generate: ${esito.Generate} (saltate: ${esito.Saltate}, origine: ${origine})`,
+    `Proposte di riordino generate: ${esito.Generate} (saltate: ${esito.Saltate}, escluse per prefisso: ${esito.Escluse}, origine: ${origine})`,
     '',
     op,
   )
